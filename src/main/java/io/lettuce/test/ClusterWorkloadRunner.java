@@ -1,52 +1,41 @@
 package io.lettuce.test;
 
 import io.lettuce.core.RedisURI;
-import io.lettuce.core.cluster.*;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.cluster.GetSetClusterWorkload;
 
-import java.util.ArrayList;
-import java.util.List;
+public class ClusterWorkloadRunner
+        extends BaseWorkloadRunner<RedisClusterClient, StatefulRedisClusterConnection<String, String>> {
 
-public class ClusterWorkloadRunner extends BaseWorkloadRunner{
-
-  public ClusterWorkloadRunner(Config config) {
-    super(config);
-  }
-
-  public void run() {
-    RedisURI redisUri = buildRedisUri(config);
-
-    List<RedisClusterClient> clients = new ArrayList<>();
-    List<List<StatefulRedisClusterConnection<String, String>>> connections = new ArrayList<>();
-
-    // Create the specified number of client instances
-    for (int i = 0; i < config.test.clients; i++) {
-      RedisClusterClient clusterClient = RedisClusterClient.create(redisUri);
-      clusterClient.setOptions(ClusterClientOptions.builder()
-          .autoReconnect(config.clientOptions.autoReconnect)
-          .pingBeforeActivateConnection(config.clientOptions.pingBeforeActivate)
-          // TODO : Add more cluster options
-          .build());
-      clients.add(clusterClient);
-
-      List<StatefulRedisClusterConnection<String, String>> clientConnections = new ArrayList<>();
-      for (int j = 0; j < config.test.connectionsPerClient; j++) {
-        clientConnections.add(clients.get(j).connect());
-      }
-      connections.add(clientConnections);
+    public ClusterWorkloadRunner(Config config) {
+        super(config);
     }
 
-    for (int i = 0; i < config.test.clients; i++) {
-      for (StatefulRedisClusterConnection<String, String> conn : connections.get(i)) {
-        switch (config.test.workload.getType()) {
-        case "get_set":
-          submit(new GetSetClusterWorkload(conn));
-          break;
-        default:
-          System.out.println("Unsupported workload for cluster mode.");
-        }
-      }
+    @Override
+    protected RedisClusterClient createClient(RedisURI redisUri, Config config) {
+        RedisClusterClient clusterClient = RedisClusterClient.create(redisUri);
+        clusterClient.setOptions(ClusterClientOptions.builder().autoReconnect(config.clientOptions.autoReconnect)
+                .pingBeforeActivateConnection(config.clientOptions.pingBeforeActivate)
+                // TODO : Add important cluster options
+                .build());
+        return clusterClient;
     }
-  }
+
+    @Override
+    protected StatefulRedisClusterConnection<String, String> createConnection(RedisClusterClient client, Config config) {
+        return client.connect();
+    }
+
+    @Override
+    protected BaseWorkload createWorkload(RedisClusterClient client, StatefulRedisClusterConnection<String, String> connection,
+            Config config) {
+        return switch (config.test.workload.getType()) {
+            case "get_set" -> new GetSetClusterWorkload(connection);
+            default -> throw new IllegalArgumentException("Unsupported workload." + config.test.workload.getType());
+        };
+    }
+
 }

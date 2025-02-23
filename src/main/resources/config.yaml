@@ -12,11 +12,9 @@ test:
   mode: standalone  # or cluster
   clients: 1  # Number of client instances
   connectionsPerClient: 1  # Number of connections per client
-  threads: 1
   workload:
     type: get_set     # Options: get_set, multi, pub_sub
-    maxDuration: 30s  # Max duration in seconds per workload
-    delayBetweenIterationsMs: 0  # Delay between iterations in milliseconds
+    maxDuration: 10s  # Max duration in seconds per workload
 
 clientOptions:
   autoReconnect: true
