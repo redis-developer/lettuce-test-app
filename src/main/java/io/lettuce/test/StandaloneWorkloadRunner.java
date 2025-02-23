@@ -4,14 +4,18 @@ import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.metrics.MicrometerCommandLatencyRecorder;
+import io.lettuce.core.metrics.MicrometerOptions;
+import io.lettuce.core.resource.ClientResources;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.GetSetWorkload;
 import io.lettuce.test.workloads.MultiWorkload;
 import io.lettuce.test.workloads.PubSubWorkload;
+import io.lettuce.test.workloads.RedisCommandsWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StandaloneWorkloadRunner extends BaseWorkloadRunner<RedisClient, StatefulRedisConnection<String, String>> {
+public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, StatefulRedisConnection<String, String>> {
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneWorkloadRunner.class);
 
@@ -23,6 +27,7 @@ public class StandaloneWorkloadRunner extends BaseWorkloadRunner<RedisClient, St
     protected BaseWorkload createWorkload(RedisClient client, StatefulRedisConnection<String, String> connection,
             Config config) {
         return switch (config.test.workload.getType()) {
+            case "redis_commands" -> new RedisCommandsWorkload(connection);
             case "get_set" -> new GetSetWorkload(connection);
             case "multi" -> new MultiWorkload(connection);
             case "pub_sub" -> new PubSubWorkload(client);
@@ -33,11 +38,13 @@ public class StandaloneWorkloadRunner extends BaseWorkloadRunner<RedisClient, St
 
     @Override
     protected RedisClient createClient(RedisURI redisUri, Config config) {
+
+
         RedisClient client = RedisClient.create(redisUri);
-        client.setOptions(ClientOptions.builder().autoReconnect(config.clientOptions.autoReconnect)
-                .pingBeforeActivateConnection(config.clientOptions.pingBeforeActivate)
-                // TODO : Add important options
-                .build());
+
+        ClientOptions clientOptions = createClientOptions(config.clientOptions);
+        client.setOptions(clientOptions);
+
         return client;
     }
 

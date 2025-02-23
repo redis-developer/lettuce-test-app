@@ -10,5 +10,5 @@ mvn clean package
 ## Usage
 
 ```sh
-java -jar lettuce-test-app-1.0-SNAPSHOT.jar <config.yaml>
+java -jar lettuce-test-app-1.0-SNAPSHOT.jar --config <config.yaml> --workdir <workdir>
 ```

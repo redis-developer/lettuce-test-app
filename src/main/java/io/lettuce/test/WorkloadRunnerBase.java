@@ -1,7 +1,10 @@
 package io.lettuce.test;
 
+import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.SocketOptions;
 import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.test.Config.ClientOptionsConfig;
 import io.lettuce.test.workloads.BaseWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +17,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class BaseWorkloadRunner<C, Conn extends StatefulConnection<?, ?>> implements AutoCloseable {
+public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?>> implements AutoCloseable {
 
     private static final long SHUTDOWN_DELAY = Duration.ofSeconds(1).toSeconds();
 
-    private static final Logger log = LoggerFactory.getLogger(BaseWorkloadRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(WorkloadRunnerBase.class);
 
     Config config;
 
@@ -26,7 +29,7 @@ public abstract class BaseWorkloadRunner<C, Conn extends StatefulConnection<?, ?
 
     Workloads submittedWorkloads = new Workloads();
 
-    public BaseWorkloadRunner(Config config) {
+    public WorkloadRunnerBase(Config config) {
         this.config = config;
     }
 
@@ -38,21 +41,26 @@ public abstract class BaseWorkloadRunner<C, Conn extends StatefulConnection<?, ?
 
         // Create the specified number of client instances
         for (int i = 0; i < config.test.clients; i++) {
-            C client = createClient(redisUri, config);
-            clients.add(client);
+            C client = tryCreateClient(redisUri, config);
+            if (client != null) {
+                clients.add(client);
 
-            List<Conn> clientConnections = new ArrayList<>();
-            for (int j = 0; j < config.test.connectionsPerClient; j++) {
-                clientConnections.add(createConnection(client, config));
+                List<Conn> clientConnections = new ArrayList<>();
+                for (int j = 0; j < config.test.connectionsPerClient; j++) {
+                    Conn conn = tryCreateConnection(client, config);
+                    if (conn != null) {
+                        clientConnections.add(conn);
+                    }
+                }
+                connections.add(clientConnections);
             }
-            connections.add(clientConnections);
         }
 
         executeWorkloads(clients, connections);
     }
 
     private void executeWorkloads(List<C> clients, List<List<Conn>> connections) {
-        for (int i = 0; i < config.test.clients; i++) {
+        for (int i = 0; i < clients.size(); i++) {
             for (Conn conn : connections.get(i)) {
                 BaseWorkload workload = createWorkload(clients.get(i), conn, config);
                 if (workload != null) {
@@ -62,6 +70,24 @@ public abstract class BaseWorkloadRunner<C, Conn extends StatefulConnection<?, ?
                     throw new IllegalArgumentException("Unsupported workload." + config.test.workload.getType());
                 }
             }
+        }
+    }
+
+    private  C tryCreateClient(RedisURI redisUri, Config config){
+        try {
+            return createClient(redisUri, config);
+        } catch (Exception e) {
+            log.error("Failed to create client: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private  Conn tryCreateConnection(C client, Config config){
+        try {
+            return createConnection(client, config);
+        } catch (Exception e) {
+            log.error("Failed to create connection: " + e.getMessage());
+            return null;
         }
     }
 
@@ -134,6 +160,63 @@ public abstract class BaseWorkloadRunner<C, Conn extends StatefulConnection<?, ?
         }
 
         executor.shutdownNow();
+    }
+
+    protected ClientOptions createClientOptions(ClientOptionsConfig config) {
+        ClientOptions.Builder builder =  ClientOptions.builder();
+        if (config != null ) {
+            if (config.autoReconnect != null) {
+                builder.autoReconnect(config.autoReconnect);
+            }
+            if (config.pingBeforeActivate != null) {
+                builder.pingBeforeActivateConnection(config.pingBeforeActivate);
+            }
+
+            if (config.socketOptions != null) {
+                SocketOptions.Builder socketOptions = SocketOptions.builder();
+                applySocketOptions(socketOptions, config.socketOptions);
+                builder.socketOptions(socketOptions.build());
+            }
+        }
+
+        return builder.build();
+    }
+
+    private void applySocketOptions(SocketOptions.Builder builder, Config.SocketOptionsConfig config) {
+        if (config.keepAliveOptions != null) {
+            SocketOptions.KeepAliveOptions.Builder keepAliveOptions = SocketOptions.KeepAliveOptions.builder();
+            applyKeepAliveOptions(keepAliveOptions, config.keepAliveOptions);
+            builder.keepAlive(keepAliveOptions.build());
+        }
+        if (config.tcpUserTimeoutOptions != null) {
+            SocketOptions.TcpUserTimeoutOptions.Builder tcpUserTimeoutOptions = SocketOptions.TcpUserTimeoutOptions.builder();
+            applyTcpUserTimeoutOptions(tcpUserTimeoutOptions, config.tcpUserTimeoutOptions);
+            builder.tcpUserTimeout(tcpUserTimeoutOptions.build());
+        }
+    }
+
+    private void applyTcpUserTimeoutOptions(
+            SocketOptions.TcpUserTimeoutOptions.Builder builder, Config.TcpUserTimeoutOptionsConfig config) {
+        if (config.tcpUserTimeoutMs != null) {
+            builder.tcpUserTimeout(Duration.ofMillis(config.tcpUserTimeoutMs));
+        }
+        if (config.enabled != null) {
+            builder.enable();
+        }
+    }
+
+    private void applyKeepAliveOptions(SocketOptions.KeepAliveOptions.Builder builder, Config.KeepAliveOptionsConfig config) {
+        if (config.intervalMs != null) {
+            builder.interval(Duration.ofMillis(config.intervalMs));
+        }
+
+        if (config.idleMs != null) {
+            builder.idle(Duration.ofMillis(config.idleMs));
+        }
+
+        if (config.count != null) {
+            builder.count(config.count);
+        }
     }
 
 }

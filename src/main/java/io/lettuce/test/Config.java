@@ -89,9 +89,36 @@ public class Config {
 
     public static class ClientOptionsConfig {
 
-        public boolean autoReconnect;
+        public Boolean autoReconnect;
 
-        public boolean pingBeforeActivate;
+        public Boolean pingBeforeActivate;
+
+        public SocketOptionsConfig socketOptions;
+    }
+
+
+    public static class SocketOptionsConfig {
+
+        public TcpUserTimeoutOptionsConfig tcpUserTimeoutOptions;
+
+        public KeepAliveOptionsConfig keepAliveOptions;
+
+    }
+
+    public static class TcpUserTimeoutOptionsConfig {
+
+        public Long tcpUserTimeoutMs;
+
+        public Boolean enabled;
+    }
+
+    public static class KeepAliveOptionsConfig {
+
+        public Long intervalMs;
+
+        public Long idleMs;
+
+        public Integer count;
 
     }
 

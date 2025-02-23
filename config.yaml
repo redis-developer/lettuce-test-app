@@ -1,0 +1,21 @@
+redis:
+  host: localhost
+  port: 6379
+  useTls: false
+  clientName: "lettuce-test-app"
+  database: 0
+  #timeout: 1000
+  #password: "password"
+  verifyPeer: false
+
+test:
+  mode: standalone  # or cluster
+  clients: 1  # Number of client instances
+  connectionsPerClient: 1  # Number of connections per client
+  workload:
+    type: get_set     # Options: get_set, multi, pub_sub
+    maxDuration: 30s  # Max duration in seconds per workload
+
+clientOptions:
+  autoReconnect: true
+  pingBeforeActivate: true

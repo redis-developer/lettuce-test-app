@@ -1,6 +1,7 @@
 package io.lettuce.test.workloads;
 
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
 
 public class MultiWorkload extends BaseWorkload {
 
@@ -12,11 +13,14 @@ public class MultiWorkload extends BaseWorkload {
 
     @Override
     public void run() {
+        RedisCommands<String, String> sync = conn.sync();
+        sync.multi();
+        for (int i = 0;i < 5; i++) {
+            sync.set("key"+i, "value" + i);
+            sync.get("key"+i);
+        }
 
-        conn.sync().multi();
-        conn.sync().set("key", "value");
-        conn.sync().get("key");
-        conn.sync().exec();
+        sync.exec();
     }
 
 }

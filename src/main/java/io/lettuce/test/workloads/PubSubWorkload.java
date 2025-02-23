@@ -3,8 +3,12 @@ package io.lettuce.test.workloads;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PubSubWorkload extends BaseWorkload {
+
+    private static final Logger log = LoggerFactory.getLogger(PubSubWorkload.class);
 
     RedisClient client;
 
@@ -20,7 +24,7 @@ public class PubSubWorkload extends BaseWorkload {
 
             @Override
             public void message(String channel, String message) {
-                // TODO : Handle incoming message
+                log.debug("Received message: " + message);
             }
 
             @Override
@@ -44,11 +48,15 @@ public class PubSubWorkload extends BaseWorkload {
             }
         });
 
-        pubSubConn.sync().subscribe("testChannel");
+        pubSubConn.sync().subscribe("my_channel");
 
         while (!Thread.currentThread().isInterrupted()) {
-            // Simulating Pub/Sub operations
-            pubSubConn.sync().publish("testChannel", "message");
+            pubSubConn.sync().publish("my_channel", "Test Message");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

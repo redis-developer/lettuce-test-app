@@ -12,8 +12,8 @@ public class GetSetWorkload extends BaseWorkload {
 
     @Override
     public void run() {
-        conn.sync().set("key", "value");
-        conn.sync().get("key");
+        withLatency(()->conn.sync().set("key", "value"));
+        withLatency(()->conn.sync().get("key"));
     }
 
 }

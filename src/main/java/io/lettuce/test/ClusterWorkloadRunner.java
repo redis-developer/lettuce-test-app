@@ -1,5 +1,6 @@
 package io.lettuce.test;
 
+import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
@@ -8,7 +9,7 @@ import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.cluster.GetSetClusterWorkload;
 
 public class ClusterWorkloadRunner
-        extends BaseWorkloadRunner<RedisClusterClient, StatefulRedisClusterConnection<String, String>> {
+        extends WorkloadRunnerBase<RedisClusterClient, StatefulRedisClusterConnection<String, String>> {
 
     public ClusterWorkloadRunner(Config config) {
         super(config);
@@ -17,10 +18,11 @@ public class ClusterWorkloadRunner
     @Override
     protected RedisClusterClient createClient(RedisURI redisUri, Config config) {
         RedisClusterClient clusterClient = RedisClusterClient.create(redisUri);
-        clusterClient.setOptions(ClusterClientOptions.builder().autoReconnect(config.clientOptions.autoReconnect)
-                .pingBeforeActivateConnection(config.clientOptions.pingBeforeActivate)
-                // TODO : Add important cluster options
-                .build());
+
+        ClientOptions clientOptions = createClientOptions(config.clientOptions);
+        ClusterClientOptions.Builder builder = ClusterClientOptions.builder(clientOptions);
+        clusterClient.setOptions(builder.build());
+
         return clusterClient;
     }
 
