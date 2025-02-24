@@ -9,7 +9,7 @@
 
     <!-- File output -->
     <appender name="file" class="ch.qos.logback.core.FileAppender">
-        <file>${workdir:-logs}/lettuce-test-app.log</file>
+        <file>${logdir:-logs}/lettuce-test-app.log</file>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>

@@ -33,13 +33,6 @@ public class LettuceWorkloadRunner {
             System.exit(1);
         }
 
-        // log location
-        String workdir = cmd.getOptionValue("workdir");
-        if (workdir != null) {
-            System.setProperty("workdir", workdir);
-        }
-
-
         // Load YAML config
         Config config = loadConfig(cmd.getOptionValue("config", "config.yaml"));
 
@@ -97,10 +90,6 @@ public class LettuceWorkloadRunner {
         Option configOption = new Option("c", "config", true, "Path to the configuration YAML file");
         configOption.setRequired(false);
         options.addOption(configOption);
-
-        Option workdirOption = new Option("w", "workdir", true, "Directory to store log files");
-        workdirOption.setRequired(false);
-        options.addOption(workdirOption);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
