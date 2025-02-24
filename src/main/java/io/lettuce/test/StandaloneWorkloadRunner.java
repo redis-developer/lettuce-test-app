@@ -7,6 +7,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.metrics.MicrometerCommandLatencyRecorder;
 import io.lettuce.core.metrics.MicrometerOptions;
 import io.lettuce.core.resource.ClientResources;
+import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.GetSetWorkload;
 import io.lettuce.test.workloads.MultiWorkload;
@@ -25,14 +26,14 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
 
     @Override
     protected BaseWorkload createWorkload(RedisClient client, StatefulRedisConnection<String, String> connection,
-            Config config) {
-        return switch (config.test.workload.getType()) {
+            WorkloadConfig config) {
+        return switch (config.getType()) {
             case "redis_commands" -> new RedisCommandsWorkload(connection);
             case "get_set" -> new GetSetWorkload(connection);
             case "multi" -> new MultiWorkload(connection);
             case "pub_sub" -> new PubSubWorkload(client);
             default -> throw new IllegalArgumentException(
-                    "Invalid workload specified for standalone mode." + config.test.workload.getType());
+                    "Invalid workload specified for standalone mode." + config.getType());
         };
     }
 

@@ -5,6 +5,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.test.Config.ClientOptionsConfig;
+import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.workloads.BaseWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?>> implements AutoCloseable {
+public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, ?>> implements AutoCloseable {
 
     private static final long SHUTDOWN_DELAY = Duration.ofSeconds(1).toSeconds();
 
@@ -62,9 +63,10 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
     private void executeWorkloads(List<C> clients, List<List<Conn>> connections) {
         for (int i = 0; i < clients.size(); i++) {
             for (Conn conn : connections.get(i)) {
-                BaseWorkload workload = createWorkload(clients.get(i), conn, config);
+                C client = clients.get(i);
+                BaseWorkload workload = createWorkload(client, conn, config.test.workload);
                 if (workload != null) {
-                    submit(workload);
+                    submit(workload, config.test.workload);
                 } else {
                     log.error("Unsupported workload." + config.test.workload.getType());
                     throw new IllegalArgumentException("Unsupported workload." + config.test.workload.getType());
@@ -91,14 +93,15 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
         }
     }
 
-    protected abstract BaseWorkload createWorkload(C client, Conn connection, Config config);
+    protected abstract BaseWorkload createWorkload(C client, Conn connection, WorkloadConfig config);
 
     protected abstract C createClient(RedisURI redisUri, Config config);
 
     protected abstract Conn createConnection(C client, Config config);
 
-    protected CompletableFuture<?> submit(BaseWorkload task) {
-        ContinousWorkload workload = new ContinousWorkload(task, config.test.workload);
+    protected CompletableFuture<?> submit(BaseWorkload task, WorkloadConfig config) {
+        BaseWorkload decoratedTask =  withErrorHndler(task);
+        ContinousWorkload workload = new ContinousWorkload(decoratedTask, config);
         CompletableFuture<Void> future = CompletableFuture.runAsync(workload, executor).whenComplete((result, throwable) -> {
             submittedWorkloads.remove(workload);
             if (throwable != null) {
@@ -107,6 +110,20 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
         });
         submittedWorkloads.add(workload);
         return future;
+    }
+
+    private BaseWorkload withErrorHndler(BaseWorkload task) {
+        return new BaseWorkload() {
+            @Override
+            public void run() {
+                try {
+                    task.run();
+                } catch (Exception e) {
+                    log.error("Error workload: {} ",  e);
+                    throw new RuntimeException(e);
+                }
+            }
+        };
     }
 
     protected RedisURI buildRedisUri(Config config) {
