@@ -8,12 +8,13 @@ import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.cluster.GetSetClusterWorkload;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class ClusterWorkloadRunner
         extends WorkloadRunnerBase<RedisClusterClient, StatefulRedisClusterConnection<String, String>> {
 
-    public ClusterWorkloadRunner(Config config) {
-        super(config);
+    public ClusterWorkloadRunner(Config config, MeterRegistry meterRegistry) {
+        super(config, meterRegistry);
     }
 
     @Override

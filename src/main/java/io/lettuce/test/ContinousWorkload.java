@@ -38,7 +38,7 @@ public class ContinousWorkload implements Runnable {
                 log.debug("Iteration " + iterationCount.getAndIncrement());
                 doRun();
             } catch (Exception e) {
-                log.error("{} iteration {} completed with errors", logPrefix(), iterationCount.getAndIncrement(), e);
+                log.error("{} completed with errors", logPrefix(), e);
                 // TODO : micrometer counter
                 exceptions.add(e);
             }

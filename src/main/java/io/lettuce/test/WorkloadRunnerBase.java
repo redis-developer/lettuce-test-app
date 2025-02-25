@@ -7,6 +7,7 @@ import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.test.Config.ClientOptionsConfig;
 import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.workloads.BaseWorkload;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,14 +25,17 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
 
     private static final Logger log = LoggerFactory.getLogger(WorkloadRunnerBase.class);
 
+    private final MeterRegistry meterRegistry;
+
     Config config;
 
     ExecutorService executor = Executors.newCachedThreadPool();
 
     Workloads submittedWorkloads = new Workloads();
 
-    public WorkloadRunnerBase(Config config) {
+    public WorkloadRunnerBase(Config config, MeterRegistry meterRegistry) {
         this.config = config;
+        this.meterRegistry = meterRegistry;
     }
 
     public final void run() {
@@ -65,6 +69,7 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
             for (Conn conn : connections.get(i)) {
                 C client = clients.get(i);
                 BaseWorkload workload = createWorkload(client, conn, config.test.workload);
+                workload.meterRegistry(meterRegistry);
                 BaseWorkload withErrorHandler =  withErrorHandler(workload, client, conn);
                 if (workload != null) {
                     submit(withErrorHandler, config.test.workload);
@@ -195,6 +200,10 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
                 SocketOptions.Builder socketOptions = SocketOptions.builder();
                 applySocketOptions(socketOptions, config.socketOptions);
                 builder.socketOptions(socketOptions.build());
+            }
+
+            if (config.disconnectedBehavior != null) {
+                builder.disconnectedBehavior(ClientOptions.DisconnectedBehavior.valueOf(config.disconnectedBehavior));
             }
         }
 

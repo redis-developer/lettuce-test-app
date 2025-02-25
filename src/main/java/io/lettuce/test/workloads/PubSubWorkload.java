@@ -3,6 +3,7 @@ package io.lettuce.test.workloads;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,7 @@ public class PubSubWorkload extends BaseWorkload {
 
             @Override
             public void message(String channel, String message) {
-                log.debug("Received message: " + message);
+                log.trace("Received message: " + message);
             }
 
             @Override
@@ -48,15 +49,12 @@ public class PubSubWorkload extends BaseWorkload {
             }
         });
 
-        pubSubConn.sync().subscribe("my_channel");
+        RedisPubSubCommands<String, String> cmd = withMetrics(pubSubConn.sync());
+        cmd.subscribe("my_channel");
 
         while (!Thread.currentThread().isInterrupted()) {
-            pubSubConn.sync().publish("my_channel", "Test Message");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            RedisPubSubCommands<String, String> pubSubCommands = withMetrics(pubSubConn.sync());
+            pubSubCommands.publish("my_channel", "Test Message");
         }
     }
 

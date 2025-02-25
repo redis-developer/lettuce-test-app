@@ -4,15 +4,14 @@ import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.metrics.MicrometerCommandLatencyRecorder;
-import io.lettuce.core.metrics.MicrometerOptions;
-import io.lettuce.core.resource.ClientResources;
 import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.GetSetWorkload;
 import io.lettuce.test.workloads.MultiWorkload;
 import io.lettuce.test.workloads.PubSubWorkload;
 import io.lettuce.test.workloads.RedisCommandsWorkload;
+import io.lettuce.test.workloads.async.GetSetAsyncWorkload;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +19,8 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneWorkloadRunner.class);
 
-    public StandaloneWorkloadRunner(Config config) {
-        super(config);
+    public StandaloneWorkloadRunner(Config config, MeterRegistry meterRegistry) {
+        super(config,meterRegistry);
     }
 
     @Override
@@ -32,6 +31,8 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
             case "get_set" -> new GetSetWorkload(connection);
             case "multi" -> new MultiWorkload(connection);
             case "pub_sub" -> new PubSubWorkload(client);
+            // async
+            case "get_set_async" -> new GetSetAsyncWorkload(connection);
             default -> throw new IllegalArgumentException(
                     "Invalid workload specified for standalone mode." + config.getType());
         };

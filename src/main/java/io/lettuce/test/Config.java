@@ -19,6 +19,8 @@ public class Config {
 
     public ClientOptionsConfig clientOptions;
 
+    public MetricsConfig metrics;
+
     public static Config load(String path) throws IOException {
         return configMapper.readValue(new File(path), Config.class);
     }
@@ -94,6 +96,8 @@ public class Config {
         public Boolean pingBeforeActivate;
 
         public SocketOptionsConfig socketOptions;
+
+        public String disconnectedBehavior;  // Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
     }
 
 
@@ -122,4 +126,29 @@ public class Config {
 
     }
 
+    public static  class MetricsConfig {
+        public InfluxConfig influx;
+        public LoggingConfig logging;
+    }
+
+
+    public static class InfluxConfig {
+
+        public boolean enable;
+
+        public String uri;  // InfluxDB URL
+
+        public int db;  // Number of client instances
+
+        public Boolean autoCreateDb = true;  // Auto-create DB if missing
+
+        public String step = "5s" ; // # Step size (i.e. reporting frequency)
+    }
+
+    public static class LoggingConfig {
+        public boolean enable;
+
+        public String step = "5s" ; // # Step size (i.e. reporting frequency)
+
+    }
 }

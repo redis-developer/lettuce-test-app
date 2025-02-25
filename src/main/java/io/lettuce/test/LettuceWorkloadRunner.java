@@ -1,5 +1,6 @@
 package io.lettuce.test;
 
+import io.lettuce.test.metrics.Metrics;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -36,11 +37,14 @@ public class LettuceWorkloadRunner {
         // Load YAML config
         Config config = loadConfig(cmd.getOptionValue("config", "config.yaml"));
 
+        // Create a Micrometer registry
+        Metrics.initMeterRegistry(config.metrics);
+
         boolean isCluster = config.test.mode.equalsIgnoreCase("cluster");
         if (isCluster) {
-            runner = new ClusterWorkloadRunner(config);
+            runner = new ClusterWorkloadRunner(config, Metrics.getMeterRegistry());
         } else {
-            runner = new StandaloneWorkloadRunner(config);
+            runner = new StandaloneWorkloadRunner(config, Metrics.getMeterRegistry());
         }
 
         runner.run();

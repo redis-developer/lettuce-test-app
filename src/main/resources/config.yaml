@@ -19,3 +19,12 @@ test:
 clientOptions:
   autoReconnect: true
   pingBeforeActivate: true
+
+metrics:
+  logging:
+    step: 1s # Step size (i.e. reporting frequency)
+  influx:
+      uri: http://localhost:8086
+      db: 1
+      autoCreateDb: true
+      step: 1s # Step size (i.e. reporting frequency)

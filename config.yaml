@@ -13,9 +13,19 @@ test:
   clients: 1  # Number of client instances
   connectionsPerClient: 1  # Number of connections per client
   workload:
-    type: get_set     # Options: get_set, multi, pub_sub
-    maxDuration: 30s  # Max duration in seconds per workload
-
+    type: get_set_async     # Options: get_set, multi, pub_sub
+    maxDuration: 60s  # Max duration in seconds per workload
 clientOptions:
   autoReconnect: true
   pingBeforeActivate: true
+  disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
+metrics:
+  logging:
+    enable: true
+    step: 1s # Step size (i.e. reporting frequency)
+  influx:
+    enable: false
+    uri: http://localhost:8086
+    db: 1
+    autoCreateDb: true
+    step: 1s # Step size (i.e. reporting frequency)

@@ -1,6 +1,7 @@
 package io.lettuce.test.workloads;
 
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
 
 public class GetSetWorkload extends BaseWorkload {
 
@@ -12,8 +13,9 @@ public class GetSetWorkload extends BaseWorkload {
 
     @Override
     public void run() {
-        withLatency(()->conn.sync().set("key", "value"));
-        withLatency(()->conn.sync().get("key"));
+        RedisCommands<String, String> cmd =  withMetrics(conn.sync());
+        cmd.set("key", "value");
+        cmd.get("key");
     }
 
 }
