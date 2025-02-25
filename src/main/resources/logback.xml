@@ -14,8 +14,21 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
+    <!-- Metrics log -->
+    <appender name="metrics" class="ch.qos.logback.core.FileAppender">
+        <file>${logdir:-logs}/lettuce-test-app-metrics.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
     <logger name="io.lettuce.test.workloads" level="DEBUG"/>
+
+    <logger name="io.micrometer.core.instrument.logging" level="DEBUG">
+        <appender-ref ref="metrics"/>
+        <appender-ref ref="console"/>
+        <additivity>false</additivity>
+    </logger>
     <!-- Root logger -->
     <root level="INFO">
         <appender-ref ref="console"/>
