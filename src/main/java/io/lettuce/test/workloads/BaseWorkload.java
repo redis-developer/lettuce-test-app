@@ -10,8 +10,8 @@ import java.lang.reflect.Proxy;
 /**
  * Base class for workloads.
  * <p>
- *     Workloads are executed by the {@link io.lettuce.test.WorkloadRunnerBase} and should implement the {@link Runnable} interface.
- *     Workloads implementations are not thread safe and should not shared between threads.
+ * Workloads are executed by the {@link io.lettuce.test.WorkloadRunnerBase} and should implement the {@link Runnable} interface.
+ * Workloads implementations are not thread safe and should not shared between threads.
  *
  */
 public abstract class BaseWorkload implements Runnable {
@@ -20,7 +20,7 @@ public abstract class BaseWorkload implements Runnable {
 
     private MeterRegistry meterRegistry;
 
-    public void meterRegistry(MeterRegistry meterRegistry)  {
+    public void meterRegistry(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
 
@@ -31,10 +31,8 @@ public abstract class BaseWorkload implements Runnable {
             return target;
         }
 
-        return (T) Proxy.newProxyInstance(
-                target.getClass().getClassLoader(),
-                target.getClass().getInterfaces(),
-                new MetricsProxy<>(target, meterRegistry)
-        );
+        return (T) Proxy.newProxyInstance(target.getClass().getClassLoader(), target.getClass().getInterfaces(),
+                new MetricsProxy<>(target, meterRegistry));
     }
+
 }

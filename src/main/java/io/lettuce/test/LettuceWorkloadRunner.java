@@ -18,7 +18,7 @@ public class LettuceWorkloadRunner {
 
     private static final Logger log = LoggerFactory.getLogger(LettuceWorkloadRunner.class);
 
-    private WorkloadRunnerBase<?,?> runner = null;
+    private WorkloadRunnerBase<?, ?> runner = null;
 
     public static void main(String[] args) throws IOException {
         LettuceWorkloadRunner app = new LettuceWorkloadRunner();
@@ -109,4 +109,5 @@ public class LettuceWorkloadRunner {
 
         return cmd;
     }
+
 }

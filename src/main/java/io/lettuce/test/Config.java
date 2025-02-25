@@ -56,11 +56,11 @@ public class Config {
 
     public static class TestConfig {
 
-        public String mode;  // standalone or cluster
+        public String mode; // standalone or cluster
 
-        public int clients;  // Number of client instances
+        public int clients; // Number of client instances
 
-        public int connectionsPerClient;  // Number of connections per client
+        public int connectionsPerClient; // Number of connections per client
 
         public WorkloadConfig workload;
 
@@ -68,7 +68,7 @@ public class Config {
 
     public static class WorkloadConfig {
 
-        private String type;  // Options: get_set, multi, pub_sub
+        private String type; // Options: get_set, multi, pub_sub
 
         private String maxDuration = "60s"; // Maximum duration of the workload
 
@@ -97,9 +97,9 @@ public class Config {
 
         public SocketOptionsConfig socketOptions;
 
-        public String disconnectedBehavior;  // Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
-    }
+        public String disconnectedBehavior; // Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
 
+    }
 
     public static class SocketOptionsConfig {
 
@@ -114,6 +114,7 @@ public class Config {
         public Long tcpUserTimeoutMs;
 
         public Boolean enabled;
+
     }
 
     public static class KeepAliveOptionsConfig {
@@ -126,29 +127,34 @@ public class Config {
 
     }
 
-    public static  class MetricsConfig {
-        public InfluxConfig influx;
-        public LoggingConfig logging;
-    }
+    public static class MetricsConfig {
 
+        public InfluxConfig influx;
+
+        public LoggingConfig logging;
+
+    }
 
     public static class InfluxConfig {
 
         public boolean enable;
 
-        public String uri;  // InfluxDB URL
+        public String uri; // InfluxDB URL
 
-        public int db;  // Number of client instances
+        public int db; // Number of client instances
 
-        public Boolean autoCreateDb = true;  // Auto-create DB if missing
+        public Boolean autoCreateDb = true; // Auto-create DB if missing
 
-        public String step = "5s" ; // # Step size (i.e. reporting frequency)
+        public String step = "5s"; // # Step size (i.e. reporting frequency)
+
     }
 
     public static class LoggingConfig {
+
         public boolean enable;
 
-        public String step = "5s" ; // # Step size (i.e. reporting frequency)
+        public String step = "5s"; // # Step size (i.e. reporting frequency)
 
     }
+
 }

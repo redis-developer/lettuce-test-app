@@ -13,7 +13,7 @@ public class RedisCommandsWorkload extends BaseWorkload {
 
     @Override
     public void run() {
-        RedisCommands<String, String> cmd =  withMetrics(conn.sync());
+        RedisCommands<String, String> cmd = withMetrics(conn.sync());
         cmd.set("my_key", "Hello Redis!");
         cmd.get("my_key");
         cmd.del("my_key");

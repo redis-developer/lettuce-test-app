@@ -13,11 +13,11 @@ public class MultiWorkload extends BaseWorkload {
 
     @Override
     public void run() {
-        RedisCommands<String, String> cmd =  withMetrics(conn.sync());
+        RedisCommands<String, String> cmd = withMetrics(conn.sync());
         cmd.multi();
-        for (int i = 0;i < 5; i++) {
-            cmd.set("key"+i, "value" + i);
-            cmd.get("key"+i);
+        for (int i = 0; i < 5; i++) {
+            cmd.set("key" + i, "value" + i);
+            cmd.get("key" + i);
         }
 
         cmd.exec();

@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, ?>> implements AutoCloseable {
+public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?>> implements AutoCloseable {
 
     private static final long SHUTDOWN_DELAY = Duration.ofSeconds(1).toSeconds();
 
@@ -70,7 +70,7 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
                 C client = clients.get(i);
                 BaseWorkload workload = createWorkload(client, conn, config.test.workload);
                 workload.meterRegistry(meterRegistry);
-                BaseWorkload withErrorHandler =  withErrorHandler(workload, client, conn);
+                BaseWorkload withErrorHandler = withErrorHandler(workload, client, conn);
                 if (workload != null) {
                     submit(withErrorHandler, config.test.workload);
                 } else {
@@ -81,7 +81,7 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
         }
     }
 
-    private  C tryCreateClient(RedisURI redisUri, Config config){
+    private C tryCreateClient(RedisURI redisUri, Config config) {
         try {
             return createClient(redisUri, config);
         } catch (Exception e) {
@@ -90,7 +90,7 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
         }
     }
 
-    private  Conn tryCreateConnection(C client, Config config){
+    private Conn tryCreateConnection(C client, Config config) {
         try {
             return createConnection(client, config);
         } catch (Exception e) {
@@ -119,6 +119,7 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
 
     private BaseWorkload withErrorHandler(BaseWorkload task, C client, Conn conn) {
         return new BaseWorkload() {
+
             @Override
             public void run() {
                 try {
@@ -126,10 +127,11 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
                 } catch (Exception e) {
                     // Note: Use client and conn reference to track, which client and connection caused the error
                     // could not find other means to identify the client and connection
-                    log.error("Error client: {} conn: {}",  client , conn,e);
+                    log.error("Error client: {} conn: {}", client, conn, e);
                     throw e;
                 }
             }
+
         };
     }
 
@@ -187,8 +189,8 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
     }
 
     protected ClientOptions createClientOptions(ClientOptionsConfig config) {
-        ClientOptions.Builder builder =  ClientOptions.builder();
-        if (config != null ) {
+        ClientOptions.Builder builder = ClientOptions.builder();
+        if (config != null) {
             if (config.autoReconnect != null) {
                 builder.autoReconnect(config.autoReconnect);
             }
@@ -223,8 +225,8 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
         }
     }
 
-    private void applyTcpUserTimeoutOptions(
-            SocketOptions.TcpUserTimeoutOptions.Builder builder, Config.TcpUserTimeoutOptionsConfig config) {
+    private void applyTcpUserTimeoutOptions(SocketOptions.TcpUserTimeoutOptions.Builder builder,
+            Config.TcpUserTimeoutOptionsConfig config) {
         if (config.tcpUserTimeoutMs != null) {
             builder.tcpUserTimeout(Duration.ofMillis(config.tcpUserTimeoutMs));
         }

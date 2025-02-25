@@ -20,7 +20,7 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
     private static final Logger logger = LoggerFactory.getLogger(StandaloneWorkloadRunner.class);
 
     public StandaloneWorkloadRunner(Config config, MeterRegistry meterRegistry) {
-        super(config,meterRegistry);
+        super(config, meterRegistry);
     }
 
     @Override
@@ -33,14 +33,12 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
             case "pub_sub" -> new PubSubWorkload(client);
             // async
             case "get_set_async" -> new GetSetAsyncWorkload(connection);
-            default -> throw new IllegalArgumentException(
-                    "Invalid workload specified for standalone mode." + config.getType());
+            default -> throw new IllegalArgumentException("Invalid workload specified for standalone mode." + config.getType());
         };
     }
 
     @Override
     protected RedisClient createClient(RedisURI redisUri, Config config) {
-
 
         RedisClient client = RedisClient.create(redisUri);
 

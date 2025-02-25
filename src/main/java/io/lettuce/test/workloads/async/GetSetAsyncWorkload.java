@@ -22,7 +22,7 @@ public class GetSetAsyncWorkload extends BaseWorkload {
     public void run() {
         List<RedisFuture<String>> futures = new ArrayList<>();
 
-        RedisAsyncCommands<String, String> cmd =  withMetrics(conn.async());
+        RedisAsyncCommands<String, String> cmd = withMetrics(conn.async());
         for (int i = 0; i < 100; i++) {
             futures.add(cmd.set("key" + i, "value" + i));
             futures.add(cmd.get("key" + i));

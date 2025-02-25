@@ -19,7 +19,8 @@ public class Metrics {
     private static CompositeMeterRegistry meterRegistry;
 
     // Private constructor to prevent instantiation
-    private Metrics() {}
+    private Metrics() {
+    }
 
     public static void initMeterRegistry(Config.MetricsConfig config) {
         if (config == null) {
@@ -33,12 +34,14 @@ public class Metrics {
                     CompositeMeterRegistry compositeRegistry = new CompositeMeterRegistry();
 
                     if (config.influx != null && config.influx.enable) {
-                        InfluxMeterRegistry influxRegistry =InfluxMeterRegistry.builder(new CustomInfluxConfig(config.influx)).build();
+                        InfluxMeterRegistry influxRegistry = InfluxMeterRegistry.builder(new CustomInfluxConfig(config.influx))
+                                .build();
                         compositeRegistry.add(influxRegistry);
                     }
 
                     if (config.logging != null && config.logging.enable) {
-                        LoggingMeterRegistry loggingMeterRegistry = LoggingMeterRegistry.builder(new CustomLoggingRegistryConfig(config.logging)).build();
+                        LoggingMeterRegistry loggingMeterRegistry = LoggingMeterRegistry
+                                .builder(new CustomLoggingRegistryConfig(config.logging)).build();
                         compositeRegistry.add(loggingMeterRegistry);
                     }
 
@@ -68,19 +71,23 @@ public class Metrics {
         public String get(String key) {
             return properties.getProperty(key);
         }
+
     }
 
     // Push metrics to log
-    public static class CustomLoggingRegistryConfig implements LoggingRegistryConfig{
+    public static class CustomLoggingRegistryConfig implements LoggingRegistryConfig {
+
         private final Properties properties = new Properties();
 
         public CustomLoggingRegistryConfig(Config.LoggingConfig config) {
             properties.setProperty("logging.step", config.step);
         }
+
         @Override
         public String get(String key) {
             return properties.getProperty(key);
         }
 
     }
+
 }

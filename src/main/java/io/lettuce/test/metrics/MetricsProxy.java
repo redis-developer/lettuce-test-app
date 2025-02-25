@@ -13,10 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class MetricsProxy<T> implements InvocationHandler {
+
     private final T target;
+
     private final MeterRegistry meterRegistry;
 
     private final Map<String, Timer> latencyTimers = new ConcurrentHashMap<>();
+
     private final Map<String, Counter> commandErrors = new ConcurrentHashMap<>();
 
     public MetricsProxy(T target, MeterRegistry meterRegistry) {
@@ -41,14 +44,13 @@ public class MetricsProxy<T> implements InvocationHandler {
         }
 
         // TODO: we measure the time from the invocation of the method to the completion of the command.
-        //  Should we measure only the API call latency?
-        //  e.g. time from the invocation of the method to API call returning result.
+        // Should we measure only the API call latency?
+        // e.g. time from the invocation of the method to API call returning result.
         if (result instanceof RedisFuture<?> command) {
 
-            command.whenComplete((res, ex) ->
-            {
+            command.whenComplete((res, ex) -> {
                 if (ex != null) {
-                    errorCounter.increment();  // Increment error counter on failure
+                    errorCounter.increment(); // Increment error counter on failure
                 }
                 latencyTimer.record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
             });
@@ -62,16 +64,12 @@ public class MetricsProxy<T> implements InvocationHandler {
 
     private Timer latencyTimer(String commandName) {
 
-        return Timer.builder("redis.command.latency")
-                .tag("command", commandName)
-                .register(meterRegistry);
+        return Timer.builder("redis.command.latency").tag("command", commandName).register(meterRegistry);
     }
 
     private Counter errorCounter(String commandName) {
 
-        return Counter.builder("redis.command.errors")
-                .tag("command", commandName)
-                .register(meterRegistry);
+        return Counter.builder("redis.command.errors").tag("command", commandName).register(meterRegistry);
     }
 
 }

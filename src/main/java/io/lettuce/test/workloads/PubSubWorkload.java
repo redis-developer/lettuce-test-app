@@ -47,6 +47,7 @@ public class PubSubWorkload extends BaseWorkload {
             @Override
             public void punsubscribed(String pattern, long count) {
             }
+
         });
 
         RedisPubSubCommands<String, String> cmd = withMetrics(pubSubConn.sync());
