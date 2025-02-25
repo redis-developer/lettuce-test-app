@@ -26,14 +26,14 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
     @Override
     protected BaseWorkload createWorkload(RedisClient client, StatefulRedisConnection<String, String> connection,
             WorkloadConfig config) {
-        return switch (config.getType()) {
+        return switch (config.type) {
             case "redis_commands" -> new RedisCommandsWorkload(connection);
             case "get_set" -> new GetSetWorkload(connection);
             case "multi" -> new MultiWorkload(connection);
             case "pub_sub" -> new PubSubWorkload(client);
             // async
             case "get_set_async" -> new GetSetAsyncWorkload(connection);
-            default -> throw new IllegalArgumentException("Invalid workload specified for standalone mode." + config.getType());
+            default -> throw new IllegalArgumentException("Invalid workload specified for standalone mode." + config.type);
         };
     }
 

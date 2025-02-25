@@ -49,7 +49,7 @@ public class ContinousWorkload implements Runnable {
     }
 
     private String logPrefix() {
-        return "Workload : " + config.getType();
+        return "Workload : " + config.type;
     }
 
     /**
@@ -61,11 +61,11 @@ public class ContinousWorkload implements Runnable {
 
     private boolean maxDurationReached(long startTime) {
 
-        if (config.getMaxDuration() == null) {
+        if (config.maxDuration == null) {
             return false;
         }
 
-        return System.currentTimeMillis() >= (startTime + config.getMaxDuration().toMillis());
+        return System.currentTimeMillis() >= (startTime + config.maxDuration.toMillis());
     }
 
     public Integer getIterationCount() {

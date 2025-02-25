@@ -74,8 +74,8 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
                 if (workload != null) {
                     submit(withErrorHandler, config.test.workload);
                 } else {
-                    log.error("Unsupported workload." + config.test.workload.getType());
-                    throw new IllegalArgumentException("Unsupported workload." + config.test.workload.getType());
+                    log.error("Unsupported workload." + config.test.workload.type);
+                    throw new IllegalArgumentException("Unsupported workload." + config.test.workload.type);
                 }
             }
         }
@@ -149,7 +149,7 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
         }
 
         if (config.redis.timeout != null) {
-            builder.withTimeout(Duration.ofMillis(config.redis.timeout));
+            builder.withTimeout(config.redis.timeout);
         }
 
         return builder.build();
@@ -172,14 +172,14 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
 
     public void awaitTermination() {
 
-        long maxTime = config.test.workload.getMaxDuration().toSeconds();
+        long maxTime = config.test.workload.maxDuration.toSeconds();
         long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(maxTime + SHUTDOWN_DELAY);
 
         // Wait until the queue is empty or timeout is reached
         while (!submittedWorkloads.isEmpty() && System.currentTimeMillis() < deadline) {
             log.debug("Waiting for tasks to finish and queue to be empty...");
             try {
-                Thread.sleep(500); // Check every 500 ms
+                Thread.sleep(2000); // Check every 500 ms
             } catch (InterruptedException e) {
                 throw new RuntimeException("Interrupted while waiting for tasks to complete", e);
             }
@@ -227,8 +227,8 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
 
     private void applyTcpUserTimeoutOptions(SocketOptions.TcpUserTimeoutOptions.Builder builder,
             Config.TcpUserTimeoutOptionsConfig config) {
-        if (config.tcpUserTimeoutMs != null) {
-            builder.tcpUserTimeout(Duration.ofMillis(config.tcpUserTimeoutMs));
+        if (config.tcpUserTimeout != null) {
+            builder.tcpUserTimeout(config.tcpUserTimeout);
         }
         if (config.enabled != null) {
             builder.enable();
@@ -236,17 +236,16 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
     }
 
     private void applyKeepAliveOptions(SocketOptions.KeepAliveOptions.Builder builder, Config.KeepAliveOptionsConfig config) {
-        if (config.intervalMs != null) {
-            builder.interval(Duration.ofMillis(config.intervalMs));
+        if (config.interval != null) {
+            builder.interval(config.interval);
         }
 
-        if (config.idleMs != null) {
-            builder.idle(Duration.ofMillis(config.idleMs));
+        if (config.idle != null) {
+            builder.idle(config.idle);
         }
 
         if (config.count != null) {
             builder.count(config.count);
         }
     }
-
 }

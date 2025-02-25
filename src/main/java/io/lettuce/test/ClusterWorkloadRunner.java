@@ -36,9 +36,9 @@ public class ClusterWorkloadRunner
     @Override
     protected BaseWorkload createWorkload(RedisClusterClient client, StatefulRedisClusterConnection<String, String> connection,
             WorkloadConfig config) {
-        return switch (config.getType()) {
+        return switch (config.type) {
             case "get_set" -> new GetSetClusterWorkload(connection);
-            default -> throw new IllegalArgumentException("Unsupported workload." + config.getType());
+            default -> throw new IllegalArgumentException("Unsupported workload." + config.type);
         };
     }
 

@@ -2,17 +2,19 @@ package io.lettuce.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
-import java.time.format.DateTimeParseException;
 
 public class Config {
 
     private static final ObjectMapper configMapper = new ObjectMapper(new YAMLFactory());
-
+    static {
+        configMapper.registerModule(new JavaTimeModule());
+    }
     public RedisConfig redis;
 
     public TestConfig test;
@@ -50,7 +52,7 @@ public class Config {
 
         public String clientName = "lettuce-test-app";
 
-        public Long timeout;
+        public Duration timeout;
 
     }
 
@@ -68,25 +70,9 @@ public class Config {
 
     public static class WorkloadConfig {
 
-        private String type; // Options: get_set, multi, pub_sub
+        public String type; // Options: get_set, multi, pub_sub
 
-        private String maxDuration = "60s"; // Maximum duration of the workload
-
-        public String getType() {
-            return type;
-        }
-
-        public Duration getMaxDuration() {
-            if (maxDuration == null || maxDuration.isEmpty()) {
-                return Duration.ofSeconds(60);
-            }
-            try {
-                return Duration.parse("PT" + maxDuration.replace("s", "S").replace("m", "M").replace("h", "H"));
-            } catch (DateTimeParseException e) {
-                throw new IllegalArgumentException("Invalid duration format: " + maxDuration, e);
-            }
-        }
-
+        public Duration maxDuration = Duration.ofSeconds(60); // Maximum duration of the workload
     }
 
     public static class ClientOptionsConfig {
@@ -111,7 +97,7 @@ public class Config {
 
     public static class TcpUserTimeoutOptionsConfig {
 
-        public Long tcpUserTimeoutMs;
+        public Duration tcpUserTimeout;
 
         public Boolean enabled;
 
@@ -119,9 +105,9 @@ public class Config {
 
     public static class KeepAliveOptionsConfig {
 
-        public Long intervalMs;
+        public Duration interval;
 
-        public Long idleMs;
+        public Duration idle;
 
         public Integer count;
 
