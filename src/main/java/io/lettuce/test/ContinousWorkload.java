@@ -1,5 +1,6 @@
 package io.lettuce.test;
 
+import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.workloads.BaseWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,7 @@ public class ContinousWorkload implements Runnable {
 
     protected static final Logger log = LoggerFactory.getLogger(ContinousWorkload.class);
 
-    protected final Config.WorkloadConfig config;
+    protected final WorkloadConfig config;
 
     private final BaseWorkload workload;
 
@@ -23,7 +24,7 @@ public class ContinousWorkload implements Runnable {
 
     private final AtomicInteger iterationCount = new AtomicInteger(0);
 
-    public ContinousWorkload(BaseWorkload workload, Config.WorkloadConfig config) {
+    public ContinousWorkload(BaseWorkload workload, WorkloadConfig config) {
         this.config = config;
         this.workload = workload;
     }
@@ -37,7 +38,8 @@ public class ContinousWorkload implements Runnable {
                 log.debug("Iteration " + iterationCount.getAndIncrement());
                 doRun();
             } catch (Exception e) {
-                log.error("Error executing action", e);
+                log.error("{} iteration {} completed with errors", logPrefix(), iterationCount.getAndIncrement(), e);
+                // TODO : micrometer counter
                 exceptions.add(e);
             }
         }
@@ -47,7 +49,7 @@ public class ContinousWorkload implements Runnable {
     }
 
     private String logPrefix() {
-        return "Workload : " + workload.getClass().getSimpleName();
+        return "Workload : " + config.getType();
     }
 
     /**

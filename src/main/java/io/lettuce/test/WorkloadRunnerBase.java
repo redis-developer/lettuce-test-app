@@ -65,8 +65,9 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
             for (Conn conn : connections.get(i)) {
                 C client = clients.get(i);
                 BaseWorkload workload = createWorkload(client, conn, config.test.workload);
+                BaseWorkload withErrorHandler =  withErrorHandler(workload, client, conn);
                 if (workload != null) {
-                    submit(workload, config.test.workload);
+                    submit(withErrorHandler, config.test.workload);
                 } else {
                     log.error("Unsupported workload." + config.test.workload.getType());
                     throw new IllegalArgumentException("Unsupported workload." + config.test.workload.getType());
@@ -100,8 +101,7 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
     protected abstract Conn createConnection(C client, Config config);
 
     protected CompletableFuture<?> submit(BaseWorkload task, WorkloadConfig config) {
-        BaseWorkload decoratedTask =  withErrorHndler(task);
-        ContinousWorkload workload = new ContinousWorkload(decoratedTask, config);
+        ContinousWorkload workload = new ContinousWorkload(task, config);
         CompletableFuture<Void> future = CompletableFuture.runAsync(workload, executor).whenComplete((result, throwable) -> {
             submittedWorkloads.remove(workload);
             if (throwable != null) {
@@ -112,15 +112,17 @@ public abstract class WorkloadRunnerBase<C , Conn extends StatefulConnection<?, 
         return future;
     }
 
-    private BaseWorkload withErrorHndler(BaseWorkload task) {
+    private BaseWorkload withErrorHandler(BaseWorkload task, C client, Conn conn) {
         return new BaseWorkload() {
             @Override
             public void run() {
                 try {
                     task.run();
                 } catch (Exception e) {
-                    log.error("Error workload: {} ",  e);
-                    throw new RuntimeException(e);
+                    // Note: Use client and conn reference to track, which client and connection caused the error
+                    // could not find other means to identify the client and connection
+                    log.error("Error client: {} conn: {}",  client , conn,e);
+                    throw e;
                 }
             }
         };
