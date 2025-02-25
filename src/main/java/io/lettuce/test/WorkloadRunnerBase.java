@@ -3,6 +3,7 @@ package io.lettuce.test;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.SocketOptions;
+import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.test.Config.ClientOptionsConfig;
 import io.lettuce.test.Config.WorkloadConfig;
@@ -198,6 +199,12 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
                 builder.pingBeforeActivateConnection(config.pingBeforeActivate);
             }
 
+            if (config.timeoutOptions != null) {
+                TimeoutOptions.Builder timeoutOptions = TimeoutOptions.builder();
+                applyTimeoutOptions(timeoutOptions, config.timeoutOptions);
+                builder.timeoutOptions(timeoutOptions.build());
+            }
+
             if (config.socketOptions != null) {
                 SocketOptions.Builder socketOptions = SocketOptions.builder();
                 applySocketOptions(socketOptions, config.socketOptions);
@@ -210,6 +217,12 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
         }
 
         return builder.build();
+    }
+
+    private void applyTimeoutOptions(TimeoutOptions.Builder builder, Config.TimeoutOptionsConfig config) {
+        if (config.fixedTimeout != null) {
+            builder.fixedTimeout(config.fixedTimeout);
+        }
     }
 
     private void applySocketOptions(SocketOptions.Builder builder, Config.SocketOptionsConfig config) {
@@ -248,4 +261,5 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
             builder.count(config.count);
         }
     }
+
 }

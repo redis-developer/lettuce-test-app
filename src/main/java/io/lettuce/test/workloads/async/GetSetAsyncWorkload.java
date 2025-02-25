@@ -4,18 +4,31 @@ import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
+import io.lettuce.test.WorkloadOptions;
 import io.lettuce.test.workloads.BaseWorkload;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class GetSetAsyncWorkload extends BaseWorkload {
 
-    StatefulRedisConnection<String, String> conn;
+    private final StatefulRedisConnection<String, String> conn;
 
-    public GetSetAsyncWorkload(StatefulRedisConnection<String, String> conn) {
+    private final double getSetRatio;
+
+    private final int valueSize;
+
+    private final int operationCount;
+
+    public GetSetAsyncWorkload(StatefulRedisConnection<String, String> conn, WorkloadOptions options) {
+        super(options);
         this.conn = conn;
+
+        this.getSetRatio = options.getDouble("getSetRatio");
+        this.valueSize = options.getInteger("valueSize");
+        this.operationCount = options.getInteger("operationCount");
     }
 
     @Override
@@ -23,9 +36,16 @@ public class GetSetAsyncWorkload extends BaseWorkload {
         List<RedisFuture<String>> futures = new ArrayList<>();
 
         RedisAsyncCommands<String, String> cmd = withMetrics(conn.async());
-        for (int i = 0; i < 100; i++) {
-            futures.add(cmd.set("key" + i, "value" + i));
-            futures.add(cmd.get("key" + i));
+        Random random = new Random();
+
+        String payload = generateRandomString(valueSize);
+
+        for (int i = 0; i < operationCount; i++) {
+            if (random.nextDouble() < getSetRatio) {
+                futures.add(cmd.set("key", payload + ":" + i));
+            } else {
+                futures.add(cmd.get("key"));
+            }
         }
 
         LettuceFutures.awaitAll(1, TimeUnit.MINUTES, futures.toArray(new RedisFuture[futures.size()]));

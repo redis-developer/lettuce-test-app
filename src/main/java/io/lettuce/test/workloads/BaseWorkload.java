@@ -1,11 +1,13 @@
 package io.lettuce.test.workloads;
 
+import io.lettuce.test.WorkloadOptions;
 import io.lettuce.test.metrics.MetricsProxy;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Proxy;
+import java.util.Random;
 
 /**
  * Base class for workloads.
@@ -20,6 +22,16 @@ public abstract class BaseWorkload implements Runnable {
 
     private MeterRegistry meterRegistry;
 
+    private final WorkloadOptions options;
+
+    public BaseWorkload() {
+        options = WorkloadOptions.DEFAULT;
+    }
+
+    public BaseWorkload(WorkloadOptions options) {
+        this.options = options;
+    }
+
     public void meterRegistry(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
@@ -33,6 +45,14 @@ public abstract class BaseWorkload implements Runnable {
 
         return (T) Proxy.newProxyInstance(target.getClass().getClassLoader(), target.getClass().getInterfaces(),
                 new MetricsProxy<>(target, meterRegistry));
+    }
+
+    public static String generateRandomString(int size) {
+        StringBuilder builder = new StringBuilder(size);
+        for (int i = 0; i < size; i++) {
+            builder.append((char) ('a' + new Random().nextInt(26))); // Random lowercase letter
+        }
+        return builder.toString();
     }
 
 }

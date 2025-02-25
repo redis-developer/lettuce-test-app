@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Map;
 
 public class Config {
 
@@ -15,6 +16,7 @@ public class Config {
     static {
         configMapper.registerModule(new JavaTimeModule());
     }
+
     public RedisConfig redis;
 
     public TestConfig test;
@@ -73,6 +75,9 @@ public class Config {
         public String type; // Options: get_set, multi, pub_sub
 
         public Duration maxDuration = Duration.ofSeconds(60); // Maximum duration of the workload
+
+        public Map<String, Object> options;
+
     }
 
     public static class ClientOptionsConfig {
@@ -81,9 +86,17 @@ public class Config {
 
         public Boolean pingBeforeActivate;
 
+        public TimeoutOptionsConfig timeoutOptions;
+
         public SocketOptionsConfig socketOptions;
 
         public String disconnectedBehavior; // Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
+
+    }
+
+    public static class TimeoutOptionsConfig {
+
+        public Duration fixedTimeout;
 
     }
 
