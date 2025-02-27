@@ -1,26 +1,39 @@
 package io.lettuce.test;
 
+import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.core.event.Event;
+import io.lettuce.core.event.EventBus;
+import io.lettuce.core.event.connection.ReconnectAttemptEvent;
+import io.lettuce.core.event.connection.ReconnectEventHelper;
+import io.lettuce.core.event.connection.ReconnectFailedEvent;
 import io.lettuce.test.Config.ClientOptionsConfig;
 import io.lettuce.test.Config.WorkloadConfig;
+import io.lettuce.test.metrics.ConnectionKey;
 import io.lettuce.test.workloads.BaseWorkload;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?>> implements AutoCloseable {
+public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn extends StatefulConnection<?, ?>>
+        implements AutoCloseable {
 
     private static final long SHUTDOWN_DELAY = Duration.ofSeconds(1).toSeconds();
 
@@ -34,9 +47,23 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
 
     Workloads submittedWorkloads = new Workloads();
 
+    private final Timer connectionSuccessTimer;
+
+    private final Timer connectionFailureTimer;
+
+    private final Map<ConnectionKey, Counter> reconnectAttemptCounter = new ConcurrentHashMap<>();
+
+    private final Map<ConnectionKey, Counter> reconnectFailureCounter = new ConcurrentHashMap<>();
+
     public WorkloadRunnerBase(Config config, MeterRegistry meterRegistry) {
         this.config = config;
         this.meterRegistry = meterRegistry;
+
+        this.connectionSuccessTimer = Timer.builder("lettuce.connect.success")
+                .description("Measures the duration and count of successful Redis connections").register(meterRegistry);
+
+        this.connectionFailureTimer = Timer.builder("lettuce.connect.failure")
+                .description("Measures the duration and count of failed Redis connection attempts").register(meterRegistry);
     }
 
     public final void run() {
@@ -84,7 +111,9 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
 
     private C tryCreateClient(RedisURI redisUri, Config config) {
         try {
-            return createClient(redisUri, config);
+            C redisClient = createClient(redisUri, config);
+            subscribeToReconnectEvents(redisClient.getResources().eventBus());
+            return redisClient;
         } catch (Exception e) {
             log.error("Failed to create client: " + e.getMessage());
             return null;
@@ -92,10 +121,14 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
     }
 
     private Conn tryCreateConnection(C client, Config config) {
+        Timer.Sample sample = Timer.start(meterRegistry);
         try {
-            return createConnection(client, config);
+            Conn connection = createConnection(client, config);
+            sample.stop(connectionSuccessTimer);
+            return connection;
         } catch (Exception e) {
-            log.error("Failed to create connection: " + e.getMessage());
+            log.error("Failed to create connection! ", e);
+            sample.stop(connectionFailureTimer);
             return null;
         }
     }
@@ -111,7 +144,7 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
         CompletableFuture<Void> future = CompletableFuture.runAsync(workload, executor).whenComplete((result, throwable) -> {
             submittedWorkloads.remove(workload);
             if (throwable != null) {
-                log.error("Workload failed: " + throwable.getMessage());
+                log.error("Workload failed: ", throwable);
             }
         });
         submittedWorkloads.add(workload);
@@ -187,6 +220,39 @@ public abstract class WorkloadRunnerBase<C, Conn extends StatefulConnection<?, ?
         }
 
         executor.shutdownNow();
+    }
+
+    private void subscribeToReconnectEvents(EventBus eventBus) {
+        Flux<Event> events = eventBus.get();
+
+        events.filter(event -> event instanceof ReconnectAttemptEvent).subscribe(event -> {
+            ReconnectAttemptEvent reconnectEvent = (ReconnectAttemptEvent) event;
+            ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
+
+            reconnectAttemptCounter.computeIfAbsent(connectionKey, key -> createReconnectAttemptCounter(connectionKey))
+                    .increment();
+        });
+
+        events.filter(event -> event instanceof ReconnectFailedEvent).subscribe(event -> {
+            ReconnectFailedEvent reconnectEvent = (ReconnectFailedEvent) event;
+            ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
+
+            reconnectAttemptCounter.computeIfAbsent(connectionKey, key -> createReconnectFailedAttempCounter(connectionKey))
+                    .increment();
+        });
+    }
+
+    private Counter createReconnectAttemptCounter(ConnectionKey connectionKey) {
+
+        return Counter.builder("lettuce.reconnect.attempts").description("Counts the number of Redis reconnect attempts")
+                .tag("epid", connectionKey.getEpId()).tag("local", connectionKey.getLocalAddress().toString())
+                .tag("remote", connectionKey.getRemoteAddress().toString()).register(meterRegistry);
+    }
+
+    private Counter createReconnectFailedAttempCounter(ConnectionKey connectionKey) {
+        return Counter.builder("lettuce.reconnect.failures").description("Counts the number of failed Redis reconnect attempts")
+                .tag("epid", connectionKey.getEpId()).tag("local", connectionKey.getLocalAddress().toString())
+                .tag("remote", connectionKey.getRemoteAddress().toString()).register(meterRegistry);
     }
 
     protected ClientOptions createClientOptions(ClientOptionsConfig config) {

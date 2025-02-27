@@ -63,13 +63,15 @@ public class MetricsProxy<T> implements InvocationHandler {
     }
 
     private Timer latencyTimer(String commandName) {
-
-        return Timer.builder("redis.command.latency").tag("command", commandName).register(meterRegistry);
+        return Timer.builder("redis.command.latency")
+                .description("Measures the execution time of Redis commands from API invocation until command completion")
+                .tag("command", commandName).register(meterRegistry);
     }
 
     private Counter errorCounter(String commandName) {
-
-        return Counter.builder("redis.command.errors").tag("command", commandName).register(meterRegistry);
+        return Counter.builder("redis.command.errors")
+                .description("Counts the number of failed Redis command API calls that completed with an exception")
+                .tag("command", commandName).register(meterRegistry);
     }
 
 }

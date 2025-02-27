@@ -1,7 +1,7 @@
 redis:
   host: localhost
-  port: 4430
-  useTls: true
+  port: 6379
+  useTls: false
   clientName: "lettuce-test-app"
   database: 0
   #timeout: 1000s
