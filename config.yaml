@@ -1,31 +1,36 @@
 redis:
+  clientName: "lettuce-test-app"
   host: localhost
   port: 6379
   useTls: false
-  clientName: "lettuce-test-app"
-  database: 0
-  #timeout: 1000s
+  #username: "default"
   #password: "password"
   verifyPeer: false
+  database: 0
+  #timeout: 1000s
+
+
 
 test:
   mode: standalone  # or cluster
   clients: 1  # Number of client instances
   connectionsPerClient: 1  # Number of connections per client
   workload:
-    type: get_set_async # Options: get_set, multi, pub_sub
+    type: get_set_async # Available workload types:
+                        # Standalone mode: redis_commands, get_set, multi, pub_sub, get_set_async
+                        # Cluster mode: get_set
     maxDuration: PT60S  # Max duration in seconds per workload
-    options: # Options specific per workload. See below for example configuration of  get_set_async workload
-      getSetRatio: 0.1      # 50% of operations are get, 50% are set
-      valueSize: 1000        # 100 characters
+    options: # Options specific per workload. See below for example configuration of get_set_async workload
+      getSetRatio: 0.5      # 50% of operations are get, 50% are set
+      valueSize: 1000       # 100o characters
       operationCount: 100   # 100 operations per workload
 
 clientOptions:
   autoReconnect: true
   pingBeforeActivate: true
   #disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
-  timeoutOptions:
-      fixedTimeout: PT1S # 5s
+  #timeoutOptions:
+  #    fixedTimeout: PT1S # 5s
   socketOptions:
     tcpUserTimeoutOptions:
       tcpUserTimeout: PT7875S # 7875s
@@ -38,10 +43,10 @@ clientOptions:
 metrics:
   logging:
     enable: true
-    step: 1s # Step size (i.e. reporting frequency)
+    step: 5s # Step size (i.e. reporting frequency)
   influx:
     enable: false
     uri: http://localhost:8086
     db: 1
     autoCreateDb: true
-    step: 1s # Step size (i.e. reporting frequency)
+    step: 5s # Step size (i.e. reporting frequency)

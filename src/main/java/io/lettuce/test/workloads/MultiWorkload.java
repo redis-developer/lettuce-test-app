@@ -2,12 +2,14 @@ package io.lettuce.test.workloads;
 
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.test.WorkloadOptions;
 
 public class MultiWorkload extends BaseWorkload {
 
     StatefulRedisConnection<String, String> conn;
 
-    public MultiWorkload(StatefulRedisConnection<String, String> conn) {
+    public MultiWorkload(StatefulRedisConnection<String, String> conn, WorkloadOptions options) {
+        super(options);
         this.conn = conn;
     }
 

@@ -13,7 +13,7 @@ public class WorkloadOptions {
     }
 
     public WorkloadOptions(Map<String, Object> options) {
-        this.options = options;
+        this.options = Collections.unmodifiableMap(options);
     }
 
     public <T> T getOption(String key, Class<T> type) {

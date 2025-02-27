@@ -6,15 +6,15 @@ import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.test.Config.WorkloadConfig;
+import io.lettuce.test.metrics.MetricsReporter;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.cluster.GetSetClusterWorkload;
-import io.micrometer.core.instrument.MeterRegistry;
 
 public class ClusterWorkloadRunner
         extends WorkloadRunnerBase<RedisClusterClient, StatefulRedisClusterConnection<String, String>> {
 
-    public ClusterWorkloadRunner(Config config, MeterRegistry meterRegistry) {
-        super(config, meterRegistry);
+    public ClusterWorkloadRunner(Config config, MetricsReporter metricsReporter) {
+        super(config, metricsReporter);
     }
 
     @Override
@@ -36,8 +36,9 @@ public class ClusterWorkloadRunner
     @Override
     protected BaseWorkload createWorkload(RedisClusterClient client, StatefulRedisClusterConnection<String, String> connection,
             WorkloadConfig config) {
+        WorkloadOptions options = WorkloadOptions.create(config.options);
         return switch (config.type) {
-            case "get_set" -> new GetSetClusterWorkload(connection);
+            case "get_set" -> new GetSetClusterWorkload(connection, options);
             default -> throw new IllegalArgumentException("Unsupported workload." + config.type);
         };
     }

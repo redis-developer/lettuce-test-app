@@ -1,77 +1,52 @@
 package io.lettuce.test.metrics;
 
 import io.lettuce.core.RedisFuture;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 public class MetricsProxy<T> implements InvocationHandler {
 
     private final T target;
 
-    private final MeterRegistry meterRegistry;
+    private final MetricsReporter metricsReporter;
 
-    private final Map<String, Timer> latencyTimers = new ConcurrentHashMap<>();
-
-    private final Map<String, Counter> commandErrors = new ConcurrentHashMap<>();
-
-    public MetricsProxy(T target, MeterRegistry meterRegistry) {
+    public MetricsProxy(T target, MetricsReporter metricsReporter) {
         this.target = target;
-        this.meterRegistry = meterRegistry;
+        this.metricsReporter = metricsReporter;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String commandName = method.getName();
 
-        Timer latencyTimer = latencyTimers.computeIfAbsent(commandName, this::latencyTimer);
-        Counter errorCounter = commandErrors.computeIfAbsent(commandName, this::errorCounter);
-
-        long start = System.nanoTime();
+        Timer.Sample sample = metricsReporter.startCommandTimer();
         Object result;
         try {
             result = method.invoke(target, args);
+
+            // TODO: we measure the time from the invocation of the method to the completion of the command.
+            // Should we measure only the API call latency?
+            // e.g. time from the invocation of the method to API call returning result.
+            if (result instanceof RedisFuture<?> command) {
+
+                command.whenComplete((res, ex) -> {
+                    if (ex != null) {
+                        metricsReporter.incrementCommandError(commandName);
+                    }
+                    metricsReporter.recordCommandLatency(commandName, sample);
+                });
+                return result;
+            }
+
+            metricsReporter.recordCommandLatency(commandName, sample);
+            return result;
         } catch (InvocationTargetException ex) {
-            errorCounter.increment();
+            metricsReporter.incrementCommandError(commandName);
             throw ex.getCause();
         }
-
-        // TODO: we measure the time from the invocation of the method to the completion of the command.
-        // Should we measure only the API call latency?
-        // e.g. time from the invocation of the method to API call returning result.
-        if (result instanceof RedisFuture<?> command) {
-
-            command.whenComplete((res, ex) -> {
-                if (ex != null) {
-                    errorCounter.increment(); // Increment error counter on failure
-                }
-                latencyTimer.record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-            });
-
-            return result;
-        }
-
-        latencyTimer.record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-        return result;
-    }
-
-    private Timer latencyTimer(String commandName) {
-        return Timer.builder("redis.command.latency")
-                .description("Measures the execution time of Redis commands from API invocation until command completion")
-                .tag("command", commandName).register(meterRegistry);
-    }
-
-    private Counter errorCounter(String commandName) {
-        return Counter.builder("redis.command.errors")
-                .description("Counts the number of failed Redis command API calls that completed with an exception")
-                .tag("command", commandName).register(meterRegistry);
     }
 
 }

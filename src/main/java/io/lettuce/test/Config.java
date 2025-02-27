@@ -46,6 +46,8 @@ public class Config {
 
         public int database;
 
+        public String username;
+
         public String password;
 
         public boolean useTls;

@@ -1,6 +1,7 @@
 package io.lettuce.test;
 
 import io.lettuce.test.metrics.Metrics;
+import io.lettuce.test.metrics.MetricsReporter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -20,7 +21,7 @@ public class LettuceWorkloadRunner {
 
     private WorkloadRunnerBase<?, ?> runner = null;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args){
         LettuceWorkloadRunner app = new LettuceWorkloadRunner();
         app.registerShutdownHook();
         app.run(args);
@@ -39,12 +40,13 @@ public class LettuceWorkloadRunner {
 
         // Create a Micrometer registry
         Metrics.initMeterRegistry(config.metrics);
+        MetricsReporter metricsReporter = new MetricsReporter(Metrics.getMeterRegistry());
 
         boolean isCluster = config.test.mode.equalsIgnoreCase("cluster");
         if (isCluster) {
-            runner = new ClusterWorkloadRunner(config, Metrics.getMeterRegistry());
+            runner = new ClusterWorkloadRunner(config, metricsReporter);
         } else {
-            runner = new StandaloneWorkloadRunner(config, Metrics.getMeterRegistry());
+            runner = new StandaloneWorkloadRunner(config, metricsReporter);
         }
 
         runner.run();
@@ -97,7 +99,7 @@ public class LettuceWorkloadRunner {
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
-        CommandLine cmd = null;
+        CommandLine cmd;
 
         try {
             cmd = parser.parse(options, args);

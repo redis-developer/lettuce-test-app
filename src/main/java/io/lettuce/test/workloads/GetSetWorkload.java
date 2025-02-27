@@ -20,9 +20,9 @@ public class GetSetWorkload extends BaseWorkload {
         super(options);
         this.conn = conn;
 
-        this.getSetRatio = options.getDouble("getSetRatio");
-        this.valueSize = options.getInteger("valueSize");
-        this.operationCount = options.getInteger("operationCount");
+        this.getSetRatio = options().getDouble("getSetRatio");
+        this.valueSize = options().getInteger("valueSize");
+        this.operationCount = options().getInteger("operationCount");
     }
 
     @Override

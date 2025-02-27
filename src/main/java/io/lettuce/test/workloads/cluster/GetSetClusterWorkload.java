@@ -1,13 +1,15 @@
 package io.lettuce.test.workloads.cluster;
 
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.lettuce.test.WorkloadOptions;
 import io.lettuce.test.workloads.BaseWorkload;
 
 public class GetSetClusterWorkload extends BaseWorkload {
 
     StatefulRedisClusterConnection<String, String> conn;
 
-    public GetSetClusterWorkload(StatefulRedisClusterConnection<String, String> conn) {
+    public GetSetClusterWorkload(StatefulRedisClusterConnection<String, String> conn, WorkloadOptions options) {
+        super(options);
         this.conn = conn;
     }
 

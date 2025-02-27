@@ -2,7 +2,7 @@ package io.lettuce.test.workloads;
 
 import io.lettuce.test.WorkloadOptions;
 import io.lettuce.test.metrics.MetricsProxy;
-import io.micrometer.core.instrument.MeterRegistry;
+import io.lettuce.test.metrics.MetricsReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,7 @@ public abstract class BaseWorkload implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(BaseWorkload.class);
 
-    private MeterRegistry meterRegistry;
+    private MetricsReporter metricsReporter;
 
     private final WorkloadOptions options;
 
@@ -32,19 +32,23 @@ public abstract class BaseWorkload implements Runnable {
         this.options = options;
     }
 
-    public void meterRegistry(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
+    public void metricsReporter(MetricsReporter metricsReporter) {
+        this.metricsReporter = metricsReporter;
+    }
+
+    protected WorkloadOptions options() {
+        return options;
     }
 
     @SuppressWarnings("unchecked")
     protected <T> T withMetrics(T target) {
-        if (meterRegistry == null) {
+        if (metricsReporter == null) {
             log.warn("No meter registry set. Skipping metrics.");
             return target;
         }
 
         return (T) Proxy.newProxyInstance(target.getClass().getClassLoader(), target.getClass().getInterfaces(),
-                new MetricsProxy<>(target, meterRegistry));
+                new MetricsProxy<>(target, metricsReporter));
     }
 
     public static String generateRandomString(int size) {
