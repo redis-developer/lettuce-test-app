@@ -11,6 +11,8 @@ import io.lettuce.core.event.EventBus;
 import io.lettuce.core.event.connection.ReconnectAttemptEvent;
 import io.lettuce.core.event.connection.ReconnectEventHelper;
 import io.lettuce.core.event.connection.ReconnectFailedEvent;
+import io.lettuce.core.resource.ClientResources;
+import io.lettuce.core.resource.Delay;
 import io.lettuce.test.Config.ClientOptionsConfig;
 import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.metrics.ConnectionKey;
@@ -231,6 +233,19 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         });
     }
 
+
+    protected void applyConfig(ClientResources.Builder resourceBuilder, Config config) {
+        if (config.clientOptions.reconnectOptions != null) {
+            applyReconnectOptionsConfig(resourceBuilder, config.clientOptions.reconnectOptions);
+        }
+    }
+
+    private void applyReconnectOptionsConfig(ClientResources.Builder resourceBuilder, Config.ReconnectOptionsConfig config) {
+        if (config.fixedDelay != null) {
+            resourceBuilder.reconnectDelay(Delay.constant(config.fixedDelay));
+        }
+    }
+
     protected ClientOptions createClientOptions(ClientOptionsConfig config) {
         ClientOptions.Builder builder = ClientOptions.builder();
         if (config != null) {
@@ -268,6 +283,9 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     }
 
     private void applySocketOptions(SocketOptions.Builder builder, Config.SocketOptionsConfig config) {
+        if (config.connectTimeout != null) {
+            builder.connectTimeout(config.connectTimeout);
+        }
         if (config.keepAliveOptions != null) {
             SocketOptions.KeepAliveOptions.Builder keepAliveOptions = SocketOptions.KeepAliveOptions.builder();
             applyKeepAliveOptions(keepAliveOptions, config.keepAliveOptions);

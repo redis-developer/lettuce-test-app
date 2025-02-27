@@ -4,6 +4,7 @@ import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.resource.ClientResources;
 import io.lettuce.test.Config.WorkloadConfig;
 import io.lettuce.test.metrics.MetricsReporter;
 import io.lettuce.test.workloads.BaseWorkload;
@@ -40,8 +41,11 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
 
     @Override
     protected RedisClient createClient(RedisURI redisUri, Config config) {
+        ClientResources.Builder resourceBuilder = ClientResources.builder();
+        applyConfig(resourceBuilder, config);
+        ClientResources resources = resourceBuilder.build();
 
-        RedisClient client = RedisClient.create(redisUri);
+        RedisClient client = RedisClient.create(resources, redisUri);
 
         ClientOptions clientOptions = createClientOptions(config.clientOptions);
         client.setOptions(clientOptions);

@@ -13,7 +13,7 @@ redis:
 
 test:
   mode: standalone  # or cluster
-  clients: 1  # Number of client instances
+  clients: 1 # Number of client instances
   connectionsPerClient: 1  # Number of connections per client
   workload:
     type: get_set_async # Available workload types:
@@ -22,16 +22,19 @@ test:
     maxDuration: PT60S  # Max duration in seconds per workload
     options: # Options specific per workload. See below for example configuration of get_set_async workload
       getSetRatio: 0.5      # 50% of operations are get, 50% are set
-      valueSize: 1000       # 100o characters
-      operationCount: 100   # 100 operations per workload
+      valueSize: 1       # 1 characters
+      operationCount: 1000   # 1000 operations per workload
 
 clientOptions:
   autoReconnect: true
-  pingBeforeActivate: true
+  reconnectOptions:
+    fixedDelay: PT0.001S # 1ms Configures constant delay between re-connection attempts
+  pingBeforeActivate: false
   #disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
-  #timeoutOptions:
-  #    fixedTimeout: PT1S # 5s
-  socketOptions:
+  timeoutOptions: # Options to configure command timeouts
+      fixedTimeout: PT1S # 1 s
+  socketOptions:  # Options to configure low-level socket options for the connections kept to Redis servers.
+    connectTimeout: PT10S # 10 s
     tcpUserTimeoutOptions:
       tcpUserTimeout: PT7875S # 7875s
       enabled: true

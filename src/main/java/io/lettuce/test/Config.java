@@ -94,6 +94,14 @@ public class Config {
 
         public String disconnectedBehavior; // Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
 
+        public ReconnectOptionsConfig reconnectOptions;
+
+    }
+
+    public static class ReconnectOptionsConfig {
+
+        public Duration fixedDelay;
+
     }
 
     public static class TimeoutOptionsConfig {
@@ -103,6 +111,8 @@ public class Config {
     }
 
     public static class SocketOptionsConfig {
+
+        public Duration connectTimeout;
 
         public TcpUserTimeoutOptionsConfig tcpUserTimeoutOptions;
 
