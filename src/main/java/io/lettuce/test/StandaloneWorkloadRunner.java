@@ -30,7 +30,7 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
         WorkloadOptions options = WorkloadOptions.create(config.options);
         return switch (config.type) {
             case "redis_commands" -> new RedisCommandsWorkload(connection, options);
-            case "get_set" -> new GetSetWorkload(connection,options);
+            case "get_set" -> new GetSetWorkload(connection, options);
             case "multi" -> new MultiWorkload(connection, options);
             case "pub_sub" -> new PubSubWorkload(client, options);
             // async

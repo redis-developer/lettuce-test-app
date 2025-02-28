@@ -47,9 +47,15 @@ metrics:
   logging:
     enable: true
     step: 5s # Step size (i.e. reporting frequency)
-  influx:
-    enable: false
-    uri: http://localhost:8086
-    db: 1
-    autoCreateDb: true
-    step: 5s # Step size (i.e. reporting frequency)
+  influx: # InfluxDB configuration example to ship to influxdb 2.0
+    enable: false # Whether exporting of metrics to this backend is enabled. (Default: true)
+    uri:  http://localhost:8086 # URI of the InfluxDB server. (Default: http://localhost:8086)
+    org: "ORG" # Org to write metrics to. InfluxDB v2 only.
+    bucket: "BUCKET" #Bucket for metrics. Use either the bucket name or ID. Defaults to the value of the db property if not set. InfluxDB v2 only.
+    token: "TOKEN" # Authentication token to use with calls to the InfluxDB backend. For InfluxDB v1, the Bearer scheme is used. For v2, the Token scheme is used
+    step: 1s # Step size (i.e. reporting frequency)
+    #apiVersion: v1 # API version of InfluxDB to use. Defaults to 'v1' unless an org is configured. If an org is configured, defaults to 'v2'.
+    #userName: "username" # Login user of the InfluxDB server. InfluxDB v1 only.
+    #password: "password" # Login password of the InfluxDB server. InfluxDB v1 only.
+    #db: "lettuce_test" # Database to send metrics to. InfluxDB v1 only. (Default: mydb)
+    #autoCreateDb: true # Whether to create the InfluxDB database if it does not exist before attempting to publish metrics to it. InfluxDB v1 only. (Default: true)

@@ -152,11 +152,24 @@ public class Config {
 
         public String uri; // InfluxDB URL
 
-        public int db; // Number of client instances
+        public String db; // Database to send metrics to. InfluxDB v1 only. (Default: mydb)
 
         public Boolean autoCreateDb = true; // Auto-create DB if missing
 
         public String step = "5s"; // # Step size (i.e. reporting frequency)
+
+        public String org; // InfluxDB organization
+
+        public String bucket; // InfluxDB bucket
+
+        public String token; // InfluxDB token
+
+        public String apiVersion; // API version of InfluxDB to use. Defaults to 'v1' unless an org is configured. If an org is
+                                  // configured, defaults to 'v2'.
+
+        public String userName; // Login user of the InfluxDB server. InfluxDB v1 only.
+
+        public String password; // Login password of the InfluxDB server. InfluxDB v1 only.
 
     }
 

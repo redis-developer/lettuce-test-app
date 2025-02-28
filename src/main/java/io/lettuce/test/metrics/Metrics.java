@@ -61,10 +61,22 @@ public class Metrics {
         private final Properties properties = new Properties();
 
         public CustomInfluxConfig(Config.InfluxConfig config) {
-            properties.setProperty("influx.uri", config.uri);
-            properties.setProperty("influx.db", String.valueOf(config.db));
-            properties.setProperty("influx.autoCreateDb", String.valueOf(config.autoCreateDb));
-            properties.setProperty("influx.step", config.step);
+            setPropertyIfNotNull("influx.uri", config.uri);
+            setPropertyIfNotNull("influx.db", config.db);
+            setPropertyIfNotNull("influx.autoCreateDb", config.autoCreateDb);
+            setPropertyIfNotNull("influx.step", config.step);
+            setPropertyIfNotNull("influx.org", config.org);
+            setPropertyIfNotNull("influx.bucket", config.bucket);
+            setPropertyIfNotNull("influx.token", config.token);
+            setPropertyIfNotNull("influx.apiVersion", config.apiVersion);
+            setPropertyIfNotNull("influx.userName", config.userName);
+            setPropertyIfNotNull("influx.password", config.password);
+        }
+
+        private void setPropertyIfNotNull(String key, Object value) {
+            if (value != null) {
+                properties.setProperty(key, value.toString());
+            }
         }
 
         @Override

@@ -117,7 +117,8 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     /**
      * Creates a workload and initializes it with the given client, connection and configuration.
      *
-     * @param client the Redis client, supports {@link io.lettuce.core.RedisClient} or {@link io.lettuce.core.cluster.RedisClusterClient}
+     * @param client the Redis client, supports {@link io.lettuce.core.RedisClient} or
+     *        {@link io.lettuce.core.cluster.RedisClusterClient}
      * @param connection the Redis connection, supports {@link io.lettuce.core.api.StatefulRedisConnection} and
      *        {@link io.lettuce.core.cluster.api.StatefulRedisClusterConnection}
      * @param config the workload configuration
@@ -232,7 +233,6 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             metricsReporter.incrementReconnectFailure(connectionKey);
         });
     }
-
 
     protected void applyConfig(ClientResources.Builder resourceBuilder, Config config) {
         if (config.clientOptions.reconnectOptions != null) {
