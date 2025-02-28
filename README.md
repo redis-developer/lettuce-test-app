@@ -12,6 +12,15 @@ mvn clean package
 ```sh
 java -Dlogdir=./get_set/logs -jar target/lettuce-test-app-1.0-SNAPSHOT.jar --config <config.yaml>
 ```
+
+You can at any time add new workload (set of operations)
+
+By: 
+1. Choose a sample workload from the `workloads` directory
+2. Ask AI to generate a workload for you or write one depending on your needs
+3. You only need to change the run method in the `WorkloadRunner` class to use the new workload
+4. Run the application
+
 ## Enabling Metrics Logging
  
 To enable metrics logging and configure the reporting step size, you can modify the configuration as follows:
