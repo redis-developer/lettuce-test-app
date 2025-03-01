@@ -1,4 +1,4 @@
-package io.lettuce.test.workloads;
+package io.lettuce.test;
 
 public class WorkloadOptionsConstants {
 

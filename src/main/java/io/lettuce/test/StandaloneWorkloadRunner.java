@@ -27,7 +27,7 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
     @Override
     protected BaseWorkload createWorkload(RedisClient client, StatefulRedisConnection<String, String> connection,
             WorkloadConfig config) {
-        WorkloadOptions options = WorkloadOptions.create(config.options);
+        CommonWorkflowOptions options = DefaultWorkloadOptions.create(config.options);
         return switch (config.type) {
             case "redis_commands" -> new RedisCommandsWorkload(connection, options);
             case "get_set" -> new GetSetWorkload(connection, options);

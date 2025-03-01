@@ -2,7 +2,7 @@ package io.lettuce.test.util;
 
 import java.util.Random;
 
-public class TestPayloadUtils {
+public class PayloadUtils {
 
     public static String randomString(int length) {
         Random random = new Random();

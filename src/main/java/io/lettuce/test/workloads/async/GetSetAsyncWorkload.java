@@ -4,7 +4,8 @@ import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
-import io.lettuce.test.WorkloadOptions;
+import io.lettuce.test.CommonWorkflowOptions;
+import io.lettuce.test.util.PayloadUtils;
 import io.lettuce.test.workloads.BaseWorkload;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ public class GetSetAsyncWorkload extends BaseWorkload {
 
     private final StatefulRedisConnection<String, String> conn;
 
-    public GetSetAsyncWorkload(StatefulRedisConnection<String, String> conn, WorkloadOptions options) {
+    public GetSetAsyncWorkload(StatefulRedisConnection<String, String> conn, CommonWorkflowOptions options) {
         super(options);
         this.conn = conn;
     }
@@ -28,10 +29,10 @@ public class GetSetAsyncWorkload extends BaseWorkload {
         RedisAsyncCommands<String, String> cmd = withMetrics(conn.async());
         Random random = new Random();
 
-        String payload = generateRandomString(valueSize);
+        String payload = PayloadUtils.randomString(options().valueSize());
 
-        for (int i = 0; i < iterationCount; i++) {
-            if (random.nextDouble() < getSetRatio) {
+        for (int i = 0; i < options().iterationCount(); i++) {
+            if (random.nextDouble() < options().getSetRatio()) {
                 futures.add(cmd.set("key", payload));
             } else {
                 futures.add(cmd.get("key"));
