@@ -21,6 +21,34 @@ By:
 3. You only need to change the run method in the `WorkloadRunner` class to use the new workload
 4. Run the application
 
+## Configuration
+## Workloads
+
+### Common Options
+
+| Option          | Description                                                                 | Default Value |
+|-----------------|-----------------------------------------------------------------------------|---------------|
+| `valueSize`     | Size of the value in bytes.                                                 | 100           |
+| `elementsCount` | Number of elements to process.                                              | 1             |
+| `iterationCount`| Number of times to repeat the workload.                                     | 1000          |
+| `getSetRatio`   | Ratio of GET to SET operations.                                             | 0.5           |
+| `transactionSize`| Number of commands to execute per iteration.                               | 100           |
+
+### RedisClient
+
+| Alias          | Class                | Description                                                                          | Supported Options                                     |
+|----------------|----------------------|--------------------------------------------------------------------------------------|-------------------------------------------------------|
+| get_set        | `GetSetWorkload`     | Performs a mix of GET and SET operations with a specified ratio and value size.      | `getSetRatio`, `valueSize`, `iterationCount`          |
+| get_set_async  | `GetSetAsyncWorkload`| Performs asynchronous GET and SET operations with a specified ratio and value size.  | `getSetRatio`, `valueSize`, `iterationCount`          |
+| redis_commands | `RedisCommandsWorkload` | Executes a specified number of get/set/del/incr/lpush/lrange commands.               | `valueSize`, `elementsCount`, `iterationCount`        |
+| multi          | `MultiWorkload`      | Executes get/set in MULTI/EXEC transactions with a specified size and command count. | `transactionSize`, `iterationCount`, `valueSize`, `getSetRatio` |
+| pub_sub        | `PubSubWorkload`     | Publishes and subscribes to messages on a specified channel.                         |          |
+### RedisClusterClient
+
+| Alias          | Class                      | Description                                                                 | Supported Options                  |
+|----------------|----------------------------|-----------------------------------------------------------------------------|-----------------------------------|
+| get_set        | `GetSetClusterWorkload`    | Performs a mix of GET and SET operations on a Redis cluster with a specified ratio and value size. | `getSetRatio`, `valueSize`, `iterationCount` |
+
 ## Enabling Metrics Logging
  
 To enable metrics logging and configure the reporting step size, you can modify the configuration as follows:

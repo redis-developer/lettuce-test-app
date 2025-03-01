@@ -10,19 +10,9 @@ public class GetSetWorkload extends BaseWorkload {
 
     private final StatefulRedisConnection<String, String> conn;
 
-    private final double getSetRatio;
-
-    private final int valueSize;
-
-    private final int operationCount;
-
     public GetSetWorkload(StatefulRedisConnection<String, String> conn, WorkloadOptions options) {
         super(options);
         this.conn = conn;
-
-        this.getSetRatio = options().getDouble("getSetRatio");
-        this.valueSize = options().getInteger("valueSize");
-        this.operationCount = options().getInteger("operationCount");
     }
 
     @Override
@@ -32,7 +22,7 @@ public class GetSetWorkload extends BaseWorkload {
 
         String payload = generateRandomString(valueSize);
 
-        for (int i = 0; i < operationCount; i++) {
+        for (int i = 0; i < iterationCount; i++) {
             if (random.nextDouble() < getSetRatio) {
                 cmd.set("key", payload + ":" + i);
             } else {
