@@ -8,11 +8,25 @@ A workload runner for testing Lettuce client fault tolerance against Redis datab
 mvn clean package
 ```
 ## Usage
-
+Basic usage with specified runner configuration file and custom log directory:
 ```sh
-java -Dlogdir=./get_set/logs -jar target/lettuce-test-app-1.0-SNAPSHOT.jar --config <config.yaml>
+java -jar target/lettuce-test-app-0.0.1-SNAPSHOT.jar --runner.config=runner-config.yaml --logging.file.path=logs
+``` 
+### Override Configuration Properties
+Properties defined in `runner-config.yaml` can be overridden from the command line using the following syntax:
+```sh
+--<property-path>=<value>
 ```
 
+#### Example
+ ```sh
+ java -jar target/lettuce-test-app-0.0.1-SNAPSHOT.jar --runner.config=runner-config.yaml --logging.file.path=logs --runner.test.workload.type=get_set --runner.test.workload.options.getSetRatio=0.3
+ ```
+ In this example:
+ - `--runner.test.workload.type=get_set`: Overrides the workload type to `get_set`.
+ - `--runner.test.workload.options.getSetRatio=0.3`: Overrides the `getSetRatio` option for the `get_set` workload.
+
+## Adding new Workload
 You can at any time add new workload (set of operations)
 
 By: 
