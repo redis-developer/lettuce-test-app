@@ -1,13 +1,10 @@
 package io.lettuce.test.workloads;
 
 import io.lettuce.test.DefaultWorkloadOptions;
-import io.lettuce.test.CommonWorkflowOptions;
-import io.lettuce.test.metrics.MetricsProxy;
+import io.lettuce.test.CommonWorkloadOptions;
 import io.lettuce.test.metrics.MetricsReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Proxy;
 
 /**
  * Base class for workloads.
@@ -22,14 +19,14 @@ public abstract class BaseWorkload implements Runnable {
 
     private MetricsReporter metricsReporter;
 
-    private final CommonWorkflowOptions options;
+    private final CommonWorkloadOptions options;
 
     public BaseWorkload() {
         options = DefaultWorkloadOptions.DEFAULT;
 
     }
 
-    public BaseWorkload(CommonWorkflowOptions options) {
+    public BaseWorkload(CommonWorkloadOptions options) {
 
         this.options = options;
     }
@@ -38,19 +35,12 @@ public abstract class BaseWorkload implements Runnable {
         this.metricsReporter = metricsReporter;
     }
 
-    protected CommonWorkflowOptions options() {
+    protected CommonWorkloadOptions options() {
         return options;
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T withMetrics(T target) {
-        if (metricsReporter == null) {
-            log.warn("No meter registry set. Skipping metrics.");
-            return target;
-        }
-
-        return (T) Proxy.newProxyInstance(target.getClass().getClassLoader(), target.getClass().getInterfaces(),
-                new MetricsProxy<>(target, metricsReporter));
+    protected <T> T withMetrics(T cmd) {
+        return metricsReporter.withMetrics(cmd);
     }
 
 }

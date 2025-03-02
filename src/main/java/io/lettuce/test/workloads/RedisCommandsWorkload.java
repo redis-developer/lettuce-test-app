@@ -2,7 +2,7 @@ package io.lettuce.test.workloads;
 
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.lettuce.test.CommonWorkflowOptions;
+import io.lettuce.test.CommonWorkloadOptions;
 import io.lettuce.test.util.PayloadUtils;
 
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ public class RedisCommandsWorkload extends BaseWorkload {
 
     private final StatefulRedisConnection<String, String> conn;
 
-    public RedisCommandsWorkload(StatefulRedisConnection<String, String> conn, CommonWorkflowOptions options) {
+    public RedisCommandsWorkload(StatefulRedisConnection<String, String> conn, CommonWorkloadOptions options) {
         super(options);
         this.conn = conn;
     }

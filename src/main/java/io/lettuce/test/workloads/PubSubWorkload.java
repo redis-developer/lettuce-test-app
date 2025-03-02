@@ -4,7 +4,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
-import io.lettuce.test.CommonWorkflowOptions;
+import io.lettuce.test.CommonWorkloadOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,7 @@ public class PubSubWorkload extends BaseWorkload {
 
     RedisClient client;
 
-    public PubSubWorkload(RedisClient client, CommonWorkflowOptions options) {
+    public PubSubWorkload(RedisClient client, CommonWorkloadOptions options) {
         super(options);
         this.client = client;
     }

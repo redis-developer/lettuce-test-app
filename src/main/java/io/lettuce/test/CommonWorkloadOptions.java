@@ -1,6 +1,6 @@
 package io.lettuce.test;
 
-public interface CommonWorkflowOptions extends WorkloadOptions {
+public interface CommonWorkloadOptions extends WorkloadOptions {
 
     int valueSize();
 

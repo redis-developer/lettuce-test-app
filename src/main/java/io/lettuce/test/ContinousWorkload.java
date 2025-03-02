@@ -1,6 +1,6 @@
 package io.lettuce.test;
 
-import io.lettuce.test.Config.WorkloadConfig;
+import io.lettuce.test.config.WorkloadRunnerConfig.WorkloadConfig;
 import io.lettuce.test.workloads.BaseWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +32,11 @@ public class ContinousWorkload implements Runnable {
     @Override
     public void run() {
         long startTime = System.currentTimeMillis();
-        log.info(logPrefix() + " started.");
+        log.info("Workload started. {} ", config);
         while (running.get() && !maxDurationReached(startTime)) {
             try {
-                log.debug("Iteration " + iterationCount.getAndIncrement());
+                iterationCount.getAndIncrement();
+                log.debug("Iteration {} started. Workload {}", iterationCount.get(), config);
                 doRun();
             } catch (Exception e) {
                 log.error("{} completed with errors", logPrefix(), e);
@@ -49,7 +50,7 @@ public class ContinousWorkload implements Runnable {
     }
 
     private String logPrefix() {
-        return "Workload : " + config.type;
+        return "Workload : " + config.getType();
     }
 
     /**
@@ -61,11 +62,11 @@ public class ContinousWorkload implements Runnable {
 
     private boolean maxDurationReached(long startTime) {
 
-        if (config.maxDuration == null) {
+        if (config.getMaxDuration() == null) {
             return false;
         }
 
-        return System.currentTimeMillis() >= (startTime + config.maxDuration.toMillis());
+        return System.currentTimeMillis() >= (startTime + config.getMaxDuration().toMillis());
     }
 
     public Integer getIterationCount() {

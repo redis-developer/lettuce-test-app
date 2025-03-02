@@ -1,7 +1,7 @@
 package io.lettuce.test;
 
 import org.junit.jupiter.api.Test;
-
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,8 +11,8 @@ class DefaultWorkloadOptionsTest {
 
     @Test
     void testGetIntegerWithDefault() {
-        Map<String, Object> optionsMap = new HashMap<>();
-        optionsMap.put("existingKey", 42);
+        Map<String, String> optionsMap = new HashMap<>();
+        optionsMap.put("existingKey", "42");
         DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
 
         assertEquals(42, options.getInteger("existingKey", 0));
@@ -21,8 +21,8 @@ class DefaultWorkloadOptionsTest {
 
     @Test
     void testGetDoubleWithDefault() {
-        Map<String, Object> optionsMap = new HashMap<>();
-        optionsMap.put("existingKey", 3.14);
+        Map<String, String> optionsMap = new HashMap<>();
+        optionsMap.put("existingKey", "3.14");
         DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
 
         assertEquals(3.14, options.getDouble("existingKey", 0.0));
@@ -31,7 +31,7 @@ class DefaultWorkloadOptionsTest {
 
     @Test
     void testGetStringWithDefault() {
-        Map<String, Object> optionsMap = new HashMap<>();
+        Map<String, String> optionsMap = new HashMap<>();
         optionsMap.put("existingKey", "value");
         DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
 
@@ -41,8 +41,8 @@ class DefaultWorkloadOptionsTest {
 
     @Test
     void testGetIntegerWithoutDefault() {
-        Map<String, Object> optionsMap = new HashMap<>();
-        optionsMap.put("existingKey", 42);
+        Map<String, String> optionsMap = new HashMap<>();
+        optionsMap.put("existingKey", "42");
         DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
 
         assertEquals(42, options.getInteger("existingKey"));
@@ -51,8 +51,8 @@ class DefaultWorkloadOptionsTest {
 
     @Test
     void testGetDoubleWithoutDefault() {
-        Map<String, Object> optionsMap = new HashMap<>();
-        optionsMap.put("existingKey", 3.14);
+        Map<String, String> optionsMap = new HashMap<>();
+        optionsMap.put("existingKey", "3.14");
         DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
 
         assertEquals(3.14, options.getDouble("existingKey"));
@@ -61,12 +61,29 @@ class DefaultWorkloadOptionsTest {
 
     @Test
     void testGetStringWithoutDefault() {
-        Map<String, Object> optionsMap = new HashMap<>();
+        Map<String, String> optionsMap = new HashMap<>();
         optionsMap.put("existingKey", "value");
         DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
 
         assertEquals("value", options.getString("existingKey"));
         assertNull(options.getString("missingKey"));
+    }
+
+    @Test
+    void testGetDurationWithDefault() {
+        Map<String, String> optionsMap = new HashMap<>();
+        DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
+
+        assertEquals(Duration.ofMinutes(30), options.getDuration("missingKey", Duration.ofMinutes(30)));
+    }
+
+    @Test
+    void testGetDurationWithExistingKeyAndDefault() {
+        Map<String, String> optionsMap = new HashMap<>();
+        optionsMap.put("durationKey", "PT1H"); // 1 hour in ISO-8601 duration format
+        DefaultWorkloadOptions options = new DefaultWorkloadOptions(optionsMap);
+
+        assertEquals(Duration.ofHours(1), options.getDuration("durationKey", Duration.ofMinutes(30)));
     }
 
 }

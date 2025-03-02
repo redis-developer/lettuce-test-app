@@ -1,12 +1,15 @@
 package io.lettuce.test.metrics;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.Counter;
+import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Component
 public class MetricsReporter {
 
     private final MeterRegistry meterRegistry;
@@ -86,6 +89,12 @@ public class MetricsReporter {
         return Counter.builder("lettuce.reconnect.failures").description("Counts the number of failed Redis reconnect attempts")
                 .tag("epid", connectionKey.getEpId()).tag("local", connectionKey.getLocalAddress().toString())
                 .tag("remote", connectionKey.getRemoteAddress().toString()).register(meterRegistry);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T withMetrics(T target) {
+        return (T) Proxy.newProxyInstance(target.getClass().getClassLoader(), target.getClass().getInterfaces(),
+                new MetricsProxy<>(target, this));
     }
 
 }

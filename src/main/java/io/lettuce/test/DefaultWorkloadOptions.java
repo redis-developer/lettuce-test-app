@@ -1,19 +1,24 @@
 package io.lettuce.test;
 
+import jakarta.annotation.Nullable;
+
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
-import static io.lettuce.test.WorkloadOptionsConstants.DEFAULT_ELEMENTS_COUNT;
-import static io.lettuce.test.WorkloadOptionsConstants.DEFAULT_GET_SET_RATIO;
-import static io.lettuce.test.WorkloadOptionsConstants.DEFAULT_ITERATION_COUNT;
-import static io.lettuce.test.WorkloadOptionsConstants.DEFAULT_TRANSACTION_SIZE;
-import static io.lettuce.test.WorkloadOptionsConstants.DEFAULT_VALUE_SIZE;
+import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_ELEMENTS_COUNT;
+import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_GET_SET_RATIO;
+import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_ITERATION_COUNT;
+import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_TRANSACTION_SIZE;
+import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_VALUE_SIZE;
 
-public class DefaultWorkloadOptions implements CommonWorkflowOptions {
+public class DefaultWorkloadOptions implements CommonWorkloadOptions {
 
     public static final DefaultWorkloadOptions DEFAULT = new DefaultWorkloadOptions();
 
-    private Map<String, Object> options = Collections.emptyMap();
+    private Map<String, String> options = Collections.emptyMap();
 
     // Size of the tests values
     private final int valueSize;
@@ -36,12 +41,27 @@ public class DefaultWorkloadOptions implements CommonWorkflowOptions {
     // e.g. How many commands to execute in a single multi-exec transaction
     private final int transactionSize;
 
+    /**
+     * Creates a new instance of {@link DefaultWorkloadOptions} with the specified options.
+     *
+     * An empty map is used. Default values are applied for known common options, and 'null' is returned for any missing
+     * options.
+     */
     public DefaultWorkloadOptions() {
         this(Collections.emptyMap());
     }
 
-    public DefaultWorkloadOptions(Map<String, Object> options) {
-        this.options = Collections.unmodifiableMap(options);
+    /**
+     * Creates a new instance of {@link DefaultWorkloadOptions} with the specified options.
+     *
+     * If the provided options map is null, an empty map is used. Default values are applied for known common options, and
+     * 'null' is returned for any missing options.
+     *
+     * @param options a map of options
+     */
+    public DefaultWorkloadOptions(@Nullable Map<String, String> options) {
+
+        this.options = Collections.unmodifiableMap(Optional.ofNullable(options).orElse(Collections.emptyMap()));
 
         this.iterationCount = getInteger("iterationCount", DEFAULT_ITERATION_COUNT);
         this.valueSize = getInteger("valueSize", DEFAULT_VALUE_SIZE);
@@ -52,7 +72,12 @@ public class DefaultWorkloadOptions implements CommonWorkflowOptions {
 
     @Override
     public <T> T getOption(String key, Class<T> type) {
-        return type.cast(options.get(key));
+        String value = options.get(key);
+        if (value == null) {
+            return null; // Option not found
+        }
+
+        return convertValue(value, type);
     }
 
     @Override
@@ -85,8 +110,45 @@ public class DefaultWorkloadOptions implements CommonWorkflowOptions {
         return transactionSize;
     }
 
-    public static CommonWorkflowOptions create(Map<String, Object> options) {
+    public static CommonWorkloadOptions create(Map<String, String> options) {
         return new DefaultWorkloadOptions(options);
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultWorkloadOptions{" + "options=" + options + '}';
+    }
+
+    private <T> T convertValue(String value, Class<T> type) {
+        if (type == Integer.class) {
+            return type.cast(Integer.parseInt(value));
+        } else if (type == Double.class) {
+            return type.cast(Double.parseDouble(value));
+        } else if (type == String.class) {
+            return type.cast(value);
+        } else if (type == Duration.class) {
+            try {
+                return type.cast(Duration.parse(value));
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Invalid duration format: " + value, e);
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
+    }
+
+    public static class WorkloadOptionsConstants {
+
+        public static final double DEFAULT_GET_SET_RATIO = 0.5;
+
+        public static final int DEFAULT_VALUE_SIZE = 100;
+
+        public static final int DEFAULT_ELEMENTS_COUNT = 1;
+
+        public static final int DEFAULT_ITERATION_COUNT = 1000;
+
+        public static final int DEFAULT_TRANSACTION_SIZE = 100;
+
     }
 
 }

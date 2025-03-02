@@ -5,7 +5,8 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.resource.ClientResources;
-import io.lettuce.test.Config.WorkloadConfig;
+import io.lettuce.test.config.WorkloadRunnerConfig;
+import io.lettuce.test.config.WorkloadRunnerConfig.WorkloadConfig;
 import io.lettuce.test.metrics.MetricsReporter;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.lettuce.test.workloads.GetSetWorkload;
@@ -20,41 +21,41 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneWorkloadRunner.class);
 
-    public StandaloneWorkloadRunner(Config config, MetricsReporter metricsReporter) {
+    public StandaloneWorkloadRunner(WorkloadRunnerConfig config, MetricsReporter metricsReporter) {
         super(config, metricsReporter);
     }
 
     @Override
     protected BaseWorkload createWorkload(RedisClient client, StatefulRedisConnection<String, String> connection,
             WorkloadConfig config) {
-        CommonWorkflowOptions options = DefaultWorkloadOptions.create(config.options);
-        return switch (config.type) {
+        CommonWorkloadOptions options = DefaultWorkloadOptions.create(config.getOptions());
+        return switch (config.getType()) {
             case "redis_commands" -> new RedisCommandsWorkload(connection, options);
             case "get_set" -> new GetSetWorkload(connection, options);
             case "multi" -> new MultiWorkload(connection, options);
             case "pub_sub" -> new PubSubWorkload(client, options);
             // async
             case "get_set_async" -> new GetSetAsyncWorkload(connection, options);
-            default -> throw new IllegalArgumentException("Invalid workload specified for standalone mode." + config.type);
+            default -> throw new IllegalArgumentException("Invalid workload specified for standalone mode." + config.getType());
         };
     }
 
     @Override
-    protected RedisClient createClient(RedisURI redisUri, Config config) {
+    protected RedisClient createClient(RedisURI redisUri, WorkloadRunnerConfig config) {
         ClientResources.Builder resourceBuilder = ClientResources.builder();
-        applyConfig(resourceBuilder, config);
+        applyConfig(resourceBuilder, config.getClientOptions());
         ClientResources resources = resourceBuilder.build();
 
         RedisClient client = RedisClient.create(resources, redisUri);
 
-        ClientOptions clientOptions = createClientOptions(config.clientOptions);
+        ClientOptions clientOptions = createClientOptions(config.getClientOptions());
         client.setOptions(clientOptions);
 
         return client;
     }
 
     @Override
-    protected StatefulRedisConnection<String, String> createConnection(RedisClient client, Config config) {
+    protected StatefulRedisConnection<String, String> createConnection(RedisClient client, WorkloadRunnerConfig config) {
         return client.connect();
     }
 

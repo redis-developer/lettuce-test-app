@@ -4,7 +4,7 @@ import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
-import io.lettuce.test.CommonWorkflowOptions;
+import io.lettuce.test.CommonWorkloadOptions;
 import io.lettuce.test.util.PayloadUtils;
 import io.lettuce.test.workloads.BaseWorkload;
 
@@ -17,7 +17,7 @@ public class GetSetAsyncWorkload extends BaseWorkload {
 
     private final StatefulRedisConnection<String, String> conn;
 
-    public GetSetAsyncWorkload(StatefulRedisConnection<String, String> conn, CommonWorkflowOptions options) {
+    public GetSetAsyncWorkload(StatefulRedisConnection<String, String> conn, CommonWorkloadOptions options) {
         super(options);
         this.conn = conn;
     }

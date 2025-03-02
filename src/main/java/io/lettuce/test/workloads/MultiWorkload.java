@@ -2,7 +2,7 @@ package io.lettuce.test.workloads;
 
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.lettuce.test.CommonWorkflowOptions;
+import io.lettuce.test.CommonWorkloadOptions;
 import io.lettuce.test.util.PayloadUtils;
 
 import java.util.Random;
@@ -11,7 +11,7 @@ public class MultiWorkload extends BaseWorkload {
 
     StatefulRedisConnection<String, String> conn;
 
-    public MultiWorkload(StatefulRedisConnection<String, String> conn, CommonWorkflowOptions options) {
+    public MultiWorkload(StatefulRedisConnection<String, String> conn, CommonWorkloadOptions options) {
         super(options);
         this.conn = conn;
     }

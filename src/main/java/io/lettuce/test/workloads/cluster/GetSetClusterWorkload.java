@@ -2,7 +2,7 @@ package io.lettuce.test.workloads.cluster;
 
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
-import io.lettuce.test.CommonWorkflowOptions;
+import io.lettuce.test.CommonWorkloadOptions;
 import io.lettuce.test.util.PayloadUtils;
 import io.lettuce.test.workloads.BaseWorkload;
 
@@ -12,7 +12,7 @@ public class GetSetClusterWorkload extends BaseWorkload {
 
     StatefulRedisClusterConnection<String, String> conn;
 
-    public GetSetClusterWorkload(StatefulRedisClusterConnection<String, String> conn, CommonWorkflowOptions options) {
+    public GetSetClusterWorkload(StatefulRedisClusterConnection<String, String> conn, CommonWorkloadOptions options) {
         super(options);
         this.conn = conn;
     }

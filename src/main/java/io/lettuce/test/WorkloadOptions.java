@@ -1,10 +1,20 @@
 package io.lettuce.test;
 
+import java.time.Duration;
+
 public interface WorkloadOptions {
 
     <T> T getOption(String key, Class<T> type);
 
     <T> T getOption(String key, Class<T> type, T defaultValue);
+
+    default Duration getDuration(String key) {
+        return getOption(key, Duration.class);
+    }
+
+    default Duration getDuration(String key, Duration defaultValue) {
+        return getOption(key, Duration.class, defaultValue);
+    }
 
     default Integer getInteger(String key) {
         return getOption(key, Integer.class);
