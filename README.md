@@ -63,31 +63,72 @@ By:
 |----------------|----------------------------|-----------------------------------------------------------------------------|-----------------------------------|
 | get_set        | `GetSetClusterWorkload`    | Performs a mix of GET and SET operations on a Redis cluster with a specified ratio and value size. | `getSetRatio`, `valueSize`, `iterationCount` |
 
-## Enabling Metrics Logging
+## Metrics
  
 To enable metrics logging and configure the reporting step size, you can modify the configuration as follows:
- 
-```yaml
-metrics:
-  logging:
-    enable: true  # Enable logging of metrics.
-    step: 1s      # Set the step size (i.e., reporting frequency). This can be adjusted based on how often you want to report metrics.
-  influx:
-    enable: false  # InfluxDB integration can be enabled if required (set to `true`).
-    uri: http://localhost:8086  # URI for InfluxDB.
-    db: 1  # Database to write metrics to.
-    autoCreateDb: true  # Auto-create the InfluxDB database if it doesn't exist.
-    step: 1s  # Step size for InfluxDB metrics reporting.
-```
- 
-## Default Metrics Logging Location
-
+### Logging Metrics to a File
+Logging metrics to a file is enabled by default. To disable it, or to change the reporting step size, set the following properties in `application.properties`:
 Metrics will be logged in the default log file (e.g., `${logdir:-logs}/lettuce-test-app-metrics.log`).
+```properties
+logging.metrics.enabled=true
+logging.metrics.step=PT10S
+``` 
 
-## Metrics
+### Logging Metrics to InfluxDB
+Logging metrics to InfluxDB is disabled by default.To enable it, you need to set the following properties in `application.properties`:
 
- The following metrics are exposed to track the health and performance of Redis connections and commands using Micrometer:
+```properties
+# InfluxDB Configuration for Micrometer (Spring Boot 3.x)
+management.influx.metrics.export.enabled=true
+management.influx.metrics.export.uri=http://localhost:8086
+management.influx.metrics.export.org=<your-organization>
+management.influx.metrics.export.bucket=lettuce-test
+management.influx.metrics.export.token=<your-token>
+management.influx.metrics.export.auto-create-bucket=true
+management.influx.metrics.export.consistency=one
+management.influx.metrics.export.step=PT5S
+```
+### Example InfluxDB Query's
+Example query for visualising throughput per second of get on 10s window
+<details>
+  <summary><strong>Throughput per second</strong></summary>
+
+```sql
+ from(bucket: "lettuce-test")
+   |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+   |> filter(fn: (r) => r["_measurement"] == "redis_command_latency")
+   |> filter(fn: (r) => r["_field"] == "count")
+   |> aggregateWindow(every: 10s, fn: sum, createEmpty: false)  // Sum the count of requests over 10s intervals
+   |> map(fn: (r) => ({ r with _value: r._value / 10.0 }))  // Normalize to requests per second
+   |> yield(name: "throughput")
+```
+
+</details>
+
+### Setting Up InfluxDB
+<details>
+  <summary><strong>Step by step instructions</strong></summary>
  
+ 1. **Pull and Run the InfluxDB Docker container:**
+   ```sh
+   docker run -d --name influxdb -p 8086:8086 -v influxdb_data:/var/lib/influxdb influxdb:latest
+   ```
+ 2. **Create Test Bucket:**
+    - Access the InfluxDB UI at `http://localhost:8086`.
+    - Follow the on-screen instructions to set up your initial user, organization, and bucket.
+    - Create a bucket named `lettuce-test`.
+
+3. **Generate Token:**
+ - In the InfluxDB UI, go to the `Data` section.
+ - Select `Tokens`.
+ - Click `Generate Token` and choose `All-Access Token` or `Read/Write Token`.
+ - Copy the generated token for later use.
+ </details>
+
+### Lettuce Test App Custom Metrics
+ **Common Tags:**
+   - runId: Unique identifier for the test run.
+
  | Metric Name                | Type    | Description                                                                                           | Tags                                                                                              |
  |----------------------------|---------|-------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
  | `lettuce.connect.success`   | Timer   | Measures the duration and count of successful Redis connections.                                       | N/A                                                                                               |
@@ -96,4 +137,3 @@ Metrics will be logged in the default log file (e.g., `${logdir:-logs}/lettuce-t
  | `lettuce.reconnect.failures`| Counter | Counts the number of failed Redis reconnect attempts.                                                 | `epid`: Endpoint ID, `local`: Local address, `remote`: Remote address                             |
  | `redis.command.latency`     | Timer   | Measures the execution time of Redis commands from API invocation until command completion.           | `command`: Redis command (e.g., `GET`, `SET`)                                                      |
  | `redis.command.errors`      | Counter | Counts the number of failed Redis command API calls that completed with an exception.                 | `command`: Redis command (e.g., `GET`, `SET`)                                                      |
- 
