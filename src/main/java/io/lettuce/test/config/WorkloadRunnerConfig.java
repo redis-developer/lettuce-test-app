@@ -253,6 +253,8 @@ public class WorkloadRunnerConfig {
 
         private Boolean pingBeforeActivate;
 
+        private Integer requestQueueSize;
+
         private TimeoutOptionsConfig timeoutOptions;
 
         private SocketOptionsConfig socketOptions;
@@ -276,6 +278,14 @@ public class WorkloadRunnerConfig {
 
         public void setPingBeforeActivate(Boolean pingBeforeActivate) {
             this.pingBeforeActivate = pingBeforeActivate;
+        }
+
+        public Integer getRequestQueueSize() {
+            return requestQueueSize;
+        }
+
+        public void setRequestQueueSize(Integer requestQueueSize) {
+            this.requestQueueSize = requestQueueSize;
         }
 
         public TimeoutOptionsConfig getTimeoutOptions() {
@@ -313,8 +323,9 @@ public class WorkloadRunnerConfig {
         @Override
         public String toString() {
             return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", pingBeforeActivate=" + pingBeforeActivate
-                    + ", timeoutOptions=" + timeoutOptions + ", socketOptions=" + socketOptions + ", disconnectedBehavior='"
-                    + disconnectedBehavior + '\'' + ", reconnectOptions=" + reconnectOptions + '}';
+                    + ", requestQueueSize=" + requestQueueSize + ", timeoutOptions=" + timeoutOptions + ", socketOptions="
+                    + socketOptions + ", disconnectedBehavior='" + disconnectedBehavior + '\'' + ", reconnectOptions="
+                    + reconnectOptions + '}';
         }
 
     }

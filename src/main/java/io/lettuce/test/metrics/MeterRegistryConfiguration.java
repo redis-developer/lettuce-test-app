@@ -43,7 +43,6 @@ public class MeterRegistryConfiguration {
         return ExtendedLoggingMeterRegistry.builder(loggingConfig).build();
     }
 
-
     @Bean
     @ConditionalOnProperty(prefix = "simple.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)
     public SimpleMeterRegistry simpleMeterRegistry(Environment env) {

@@ -41,7 +41,9 @@ public class GetSetAsyncWorkload extends BaseWorkload {
             delay(options().delayAfterIteration());
         }
 
-        LettuceFutures.awaitAll(1, TimeUnit.MINUTES, futures.toArray(new RedisFuture[futures.size()]));
+        if (options().getBoolean("awaitAllResponses", true)) {
+            LettuceFutures.awaitAll(1, TimeUnit.MINUTES, futures.toArray(new RedisFuture[futures.size()]));
+        }
     }
 
 }

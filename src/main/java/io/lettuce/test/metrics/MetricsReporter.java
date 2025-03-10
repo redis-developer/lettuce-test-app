@@ -4,16 +4,20 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.netty.channel.local.LocalAddress;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Proxy;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -24,6 +28,11 @@ public class MetricsReporter {
     private final MeterRegistry meterRegistry;
 
     private final SimpleMeterRegistry simpleMeterRegistry;
+
+    private final TaskScheduler taskScheduler;
+
+    @Value("${simple.metrics.dumpRate:PT5S}")
+    private Duration dumpRate;
 
     private final Map<String, Timer> commandLatencyTimers = new ConcurrentHashMap<>();
 
@@ -43,9 +52,12 @@ public class MetricsReporter {
 
     private final Map<ConnectionKey, Counter> reconnectFailureCounter = new ConcurrentHashMap<>();
 
-    private final Counter  reconnectFailureTotalCounter;
+    private final Counter reconnectFailureTotalCounter;
 
-    public MetricsReporter(MeterRegistry meterRegistry, SimpleMeterRegistry simpleMeterRegistry) {
+    private ScheduledFuture<?> scheduledFuture;
+
+    public MetricsReporter(MeterRegistry meterRegistry, SimpleMeterRegistry simpleMeterRegistry,
+            @Qualifier("metricReporterScheduler") TaskScheduler taskScheduler) {
         this.meterRegistry = meterRegistry;
         this.simpleMeterRegistry = simpleMeterRegistry;
         this.connectionSuccessTimer = Timer.builder("lettuce.connect.success")
@@ -57,6 +69,7 @@ public class MetricsReporter {
         this.commandErrorTotalCounter = createCommandErrorTotalCounter();
         this.reconnectAttemptTotalCounter = createReconnectAttemptTotalCounter();
         this.reconnectFailureTotalCounter = createReconnectFailedAttempTotalCounter();
+        this.taskScheduler = taskScheduler;
     }
 
     public Timer.Sample startConnectionTimer() {
@@ -98,8 +111,8 @@ public class MetricsReporter {
     }
 
     private Timer createCommandLatencyTimer(String commandName) {
-        return Timer.builder("redis.command.latency")
-                .description("Measures the execution time of Redis commands from API invocation until command completion per command")
+        return Timer.builder("redis.command.latency").description(
+                "Measures the execution time of Redis commands from API invocation until command completion per command")
                 .tag("command", commandName).register(meterRegistry);
     }
 
@@ -122,7 +135,8 @@ public class MetricsReporter {
     }
 
     private Counter createReconnectAttemptCounter(ConnectionKey connectionKey) {
-        return Counter.builder("lettuce.reconnect.attempts").description("Counts the number of Redis reconnect attempts per connection")
+        return Counter.builder("lettuce.reconnect.attempts")
+                .description("Counts the number of Redis reconnect attempts per connection")
                 .tag("epid", connectionKey.getEpId()).tag("local", connectionKey.getLocalAddress().toString())
                 .tag("remote", connectionKey.getRemoteAddress().toString()).register(meterRegistry);
     }
@@ -139,8 +153,8 @@ public class MetricsReporter {
     }
 
     private Counter createReconnectFailedAttempTotalCounter() {
-        return Counter.builder("lettuce.reconnect.total.failures").description("Counts the number of failed Redis reconnect attempts")
-                .register(meterRegistry);
+        return Counter.builder("lettuce.reconnect.total.failures")
+                .description("Counts the number of failed Redis reconnect attempts").register(meterRegistry);
     }
 
     @SuppressWarnings("unchecked")
@@ -149,10 +163,9 @@ public class MetricsReporter {
                 new MetricsProxy<>(target, this));
     }
 
-
-    @Scheduled(fixedRateString = "${simple.metrics.dumpRate}")
-    public void dumpCounterValue( ) {
-        if ( simpleMeterRegistry == null ){
+    // @Scheduled(fixedRateString = "${simple.metrics.dumpRate}")
+    public void dumpMetrics() {
+        if (simpleMeterRegistry == null) {
             return;
         }
 
@@ -163,9 +176,25 @@ public class MetricsReporter {
                 log.info("Counter: " + counter.getId() + " value: " + counter.count());
             } else if (meter instanceof Timer) {
                 Timer timer = (Timer) meter;
-                log.info("Timer: " + timer.getId() + " count: " + timer.count() + " total time: " + timer.totalTime(TimeUnit.MILLISECONDS));
+                log.info("Timer: " + timer.getId() + " count: " + timer.count() + " total time: "
+                        + timer.totalTime(TimeUnit.MILLISECONDS));
             }
         });
+    }
+
+    @PostConstruct
+    public void startScheduledTask() {
+        scheduledFuture = taskScheduler.scheduleAtFixedRate(this::dumpMetrics, dumpRate);
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("MetricsReporter is shutting down.");
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+            dumpMetrics();
+            log.info("MetricsReporter is stopped.");
+        }
     }
 
 }

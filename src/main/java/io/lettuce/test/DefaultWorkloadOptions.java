@@ -147,6 +147,8 @@ public class DefaultWorkloadOptions implements CommonWorkloadOptions {
             return type.cast(Double.parseDouble(value));
         } else if (type == String.class) {
             return type.cast(value);
+        } else if (type == Boolean.class) {
+            return type.cast(Boolean.valueOf(value));
         } else if (type == Duration.class) {
             try {
                 return type.cast(Duration.parse(value));

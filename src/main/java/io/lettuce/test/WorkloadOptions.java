@@ -16,6 +16,14 @@ public interface WorkloadOptions {
         return getOption(key, Duration.class, defaultValue);
     }
 
+    default Boolean getBoolean(String key) {
+        return getOption(key, Boolean.class);
+    }
+
+    default Boolean getBoolean(String key, Boolean defaultValue) {
+        return getOption(key, Boolean.class, defaultValue);
+    }
+
     default Integer getInteger(String key) {
         return getOption(key, Integer.class);
     }

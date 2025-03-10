@@ -45,8 +45,8 @@ import static io.micrometer.core.instrument.util.DoubleFormat.decimalOrNan;
 import static java.util.stream.Collectors.joining;
 
 /**
- * Logging meter registry that logs metrics to a {@link Consumer} log
- * In addition to the default logging behavior, this registry also logs the value count/total.
+ * Logging meter registry that logs metrics to a {@link Consumer} log In addition to the default logging behavior, this registry
+ * also logs the value count/total.
  *
  * @author Ivo
  */
@@ -67,6 +67,7 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
 
     /**
      * Constructor allowing a custom clock and configuration.
+     * 
      * @param config the LoggingRegistryConfig
      * @param clock the Clock
      */
@@ -76,6 +77,7 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
 
     /**
      * Constructor allowing custom sink instead of a default {@code log::info}.
+     * 
      * @param loggingSink the custom sink that will be called for each time series.
      * @since 1.11.0
      */
@@ -85,6 +87,7 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
 
     /**
      * Constructor allowing a custom sink, clock and configuration.
+     * 
      * @param config the LoggingRegistryConfig
      * @param clock the Clock
      * @param loggingSink the custom sink that will be called for each time series.
@@ -106,8 +109,7 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
 
     private Function<Meter, String> defaultMeterIdPrinter() {
         return (meter) -> getConventionName(meter.getId()) + getConventionTags(meter.getId()).stream()
-            .map(t -> t.getKey() + "=" + t.getValue())
-            .collect(joining(",", "{", "}"));
+                .map(t -> t.getKey() + "=" + t.getValue()).collect(joining(",", "{", "}"));
     }
 
     @Override
@@ -133,9 +135,8 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
                         return;
                     loggingSink.accept(print.id() + " throughput=" + print.unitlessRate(count) + " mean="
                             + print.time(snapshot.mean(getBaseTimeUnit())) + " max="
-                            + print.time(snapshot.max(getBaseTimeUnit()))
-                            + " count=" + count
-                            + " total=" + print.time(snapshot.total(getBaseTimeUnit())));
+                            + print.time(snapshot.max(getBaseTimeUnit())) + " count=" + count + " total="
+                            + print.time(snapshot.total(getBaseTimeUnit())));
                 }, summary -> {
                     HistogramSnapshot snapshot = summary.takeSnapshot();
                     long count = snapshot.count();
@@ -197,10 +198,9 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
     }
 
     @Override
-    protected DistributionSummary newDistributionSummary(Meter.Id id,
-            DistributionStatisticConfig distributionStatisticConfig, double scale) {
-        return new StepDistributionSummary(id, clock, distributionStatisticConfig, scale, config.step().toMillis(),
-                false);
+    protected DistributionSummary newDistributionSummary(Meter.Id id, DistributionStatisticConfig distributionStatisticConfig,
+            double scale) {
+        return new StepDistributionSummary(id, clock, distributionStatisticConfig, scale, config.step().toMillis(), false);
     }
 
     class Printer {
@@ -216,8 +216,7 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
         }
 
         String time(double time) {
-            return TimeUtils
-                .format(Duration.ofNanos((long) TimeUtils.convert(time, getBaseTimeUnit(), TimeUnit.NANOSECONDS)));
+            return TimeUtils.format(Duration.ofNanos((long) TimeUtils.convert(time, getBaseTimeUnit(), TimeUnit.NANOSECONDS)));
         }
 
         String rate(double value) {
@@ -295,6 +294,7 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
 
         /**
          * Configure printer for meter IDs.
+         * 
          * @param meterIdPrinter printer to use for meter IDs
          * @return this builder instance
          * @since 1.2.0
