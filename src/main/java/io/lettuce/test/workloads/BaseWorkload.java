@@ -6,6 +6,8 @@ import io.lettuce.test.metrics.MetricsReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+
 /**
  * Base class for workloads.
  * <p>
@@ -35,12 +37,24 @@ public abstract class BaseWorkload implements Runnable {
         this.metricsReporter = metricsReporter;
     }
 
-    protected CommonWorkloadOptions options() {
+    public CommonWorkloadOptions options() {
         return options;
     }
 
     protected <T> T withMetrics(T cmd) {
         return metricsReporter.withMetrics(cmd);
+    }
+
+    protected void delay(Duration delay) {
+        if (Duration.ZERO.equals(delay)) {
+            return;
+        }
+
+        try {
+            Thread.sleep(delay.toMillis());
+        } catch (InterruptedException e) {
+            log.error("Delay interrupted", e);
+        }
     }
 
 }

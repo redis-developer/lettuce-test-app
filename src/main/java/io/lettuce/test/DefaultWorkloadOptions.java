@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_DELAY_AFTER_ITERATION;
+import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_DELAY_AFTER_WORKLOAD;
 import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_ELEMENTS_COUNT;
 import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_GET_SET_RATIO;
 import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DEFAULT_ITERATION_COUNT;
@@ -30,6 +32,12 @@ public class DefaultWorkloadOptions implements CommonWorkloadOptions {
     // Number of iterations to execute
     // How many times to repeat block of commands.
     private final int iterationCount;
+
+    // Artificial delay after each iteration
+    private final Duration delayAfterIteration;
+
+    // Artificial delay after each workload run
+    private final Duration delayAfterWorkload;
 
     // Ratio of GET to SET operations
     // e.g. On each iteration, choose randomly between GET and SET operations based on this ratio
@@ -68,6 +76,9 @@ public class DefaultWorkloadOptions implements CommonWorkloadOptions {
         this.elementsCount = getInteger("elementsCount", DEFAULT_ELEMENTS_COUNT);
         this.getSetRatio = getDouble("getSetRatio", DEFAULT_GET_SET_RATIO);
         this.transactionSize = getInteger("transactionSize", DEFAULT_TRANSACTION_SIZE);
+        this.delayAfterIteration = getDuration("delayAfterIteration", DEFAULT_DELAY_AFTER_ITERATION);
+        this.delayAfterWorkload = getDuration("delayAfterWorkload", DEFAULT_DELAY_AFTER_WORKLOAD);
+
     }
 
     @Override
@@ -98,6 +109,16 @@ public class DefaultWorkloadOptions implements CommonWorkloadOptions {
     @Override
     public int iterationCount() {
         return iterationCount;
+    }
+
+    @Override
+    public Duration delayAfterIteration() {
+        return delayAfterIteration;
+    }
+
+    @Override
+    public Duration delayAfterWorkload() {
+        return delayAfterWorkload;
     }
 
     @Override
@@ -148,6 +169,10 @@ public class DefaultWorkloadOptions implements CommonWorkloadOptions {
         public static final int DEFAULT_ITERATION_COUNT = 1000;
 
         public static final int DEFAULT_TRANSACTION_SIZE = 100;
+
+        public static final Duration DEFAULT_DELAY_AFTER_ITERATION = Duration.ZERO;
+
+        public static final Duration DEFAULT_DELAY_AFTER_WORKLOAD = Duration.ZERO;
 
     }
 

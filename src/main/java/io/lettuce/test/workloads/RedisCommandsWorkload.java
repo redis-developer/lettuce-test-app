@@ -33,6 +33,8 @@ public class RedisCommandsWorkload extends BaseWorkload {
             }
             cmd.lpush("my_list", payloads.toArray(new String[0]));
             cmd.lrange("my_list", 0, -1);
+
+            delay(options().delayAfterIteration());
         }
     }
 

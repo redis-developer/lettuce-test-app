@@ -5,6 +5,7 @@ import io.lettuce.test.workloads.BaseWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,6 +59,7 @@ public class ContinousWorkload implements Runnable {
      */
     private void doRun() {
         workload.run();
+        delay(workload.options().delayAfterWorkload());
     }
 
     private boolean maxDurationReached(long startTime) {
@@ -83,6 +85,18 @@ public class ContinousWorkload implements Runnable {
 
     public List<Exception> capturedExceptions() {
         return exceptions;
+    }
+
+    protected void delay(Duration delay) {
+        if (Duration.ZERO.equals(delay)) {
+            return;
+        }
+
+        try {
+            Thread.sleep(delay.toMillis());
+        } catch (InterruptedException e) {
+            log.error("Delay interrupted", e);
+        }
     }
 
 }

@@ -23,6 +23,8 @@ runner:
         getSetRatio: 0.5      # 50% of operations are get, 50% are set
         valueSize: 1        # 100 characters
         iterationCount: 1000  # How many iterations to run of the workload before finishing
+        #delayAfterIteration: PT0S # 0s  Delay after each iteration
+        #delayAfterWorkload: PT1S   # 0s  Delay after each workload
         #elementsCount: 1     # 1 elements per operation E.g how many elements to push with a `lpush`
         #transactionSize: 100    # 100 E.g. how many commands to run in a `multi`
 

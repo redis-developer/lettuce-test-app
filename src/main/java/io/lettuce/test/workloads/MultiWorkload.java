@@ -32,6 +32,8 @@ public class MultiWorkload extends BaseWorkload {
                 }
             }
             cmd.exec();
+
+            delay(options().delayAfterIteration());
         }
     }
 

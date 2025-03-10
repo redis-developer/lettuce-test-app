@@ -1,5 +1,7 @@
 package io.lettuce.test;
 
+import java.time.Duration;
+
 public interface CommonWorkloadOptions extends WorkloadOptions {
 
     int valueSize();
@@ -7,6 +9,10 @@ public interface CommonWorkloadOptions extends WorkloadOptions {
     int elementsCount();
 
     int iterationCount();
+
+    Duration delayAfterIteration();
+
+    Duration delayAfterWorkload();
 
     double getSetRatio();
 

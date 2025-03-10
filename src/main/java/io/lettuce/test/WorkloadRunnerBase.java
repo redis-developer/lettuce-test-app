@@ -148,7 +148,7 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     }
 
     private BaseWorkload withErrorHandler(BaseWorkload task, C client, Conn conn) {
-        return new BaseWorkload() {
+        return new BaseWorkload(task.options()) {
 
             @Override
             public void run() {

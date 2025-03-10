@@ -29,6 +29,8 @@ public class GetSetWorkload extends BaseWorkload {
             } else {
                 cmd.get("key");
             }
+
+            delay(options().delayAfterIteration());
         }
     }
 

@@ -1,8 +1,8 @@
 package io.lettuce.test.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.logging.LoggingMeterRegistry;
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,7 +25,7 @@ public class MeterRegistryConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "logging.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public LoggingMeterRegistry loggingMeterRegistry(Environment env) {
+    public ExtendedLoggingMeterRegistry loggingMeterRegistry(Environment env) {
         LoggingRegistryConfig loggingConfig = new LoggingRegistryConfig() {
 
             public String prefix() {
@@ -40,7 +40,15 @@ public class MeterRegistryConfiguration {
 
         };
 
-        return LoggingMeterRegistry.builder(loggingConfig).build();
+        return ExtendedLoggingMeterRegistry.builder(loggingConfig).build();
+    }
+
+
+    @Bean
+    @ConditionalOnProperty(prefix = "simple.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public SimpleMeterRegistry simpleMeterRegistry(Environment env) {
+
+        return new SimpleMeterRegistry();
     }
 
 }

@@ -58,6 +58,8 @@ public class PubSubWorkload extends BaseWorkload {
         while (!Thread.currentThread().isInterrupted()) {
             RedisPubSubCommands<String, String> pubSubCommands = withMetrics(pubSubConn.sync());
             pubSubCommands.publish("my_channel", "Test Message");
+
+            delay(options().delayAfterIteration());
         }
     }
 

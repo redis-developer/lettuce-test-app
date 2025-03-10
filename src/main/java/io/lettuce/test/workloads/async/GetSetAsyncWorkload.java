@@ -37,6 +37,8 @@ public class GetSetAsyncWorkload extends BaseWorkload {
             } else {
                 futures.add(cmd.get("key"));
             }
+
+            delay(options().delayAfterIteration());
         }
 
         LettuceFutures.awaitAll(1, TimeUnit.MINUTES, futures.toArray(new RedisFuture[futures.size()]));
