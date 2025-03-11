@@ -27,4 +27,5 @@ class RandomKeyGeneratorTest {
         String key = generator.nextKey();
         assertEquals("key-5", key);
     }
+
 }
