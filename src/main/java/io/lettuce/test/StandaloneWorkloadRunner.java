@@ -9,7 +9,6 @@ import io.lettuce.test.config.WorkloadRunnerConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.WorkloadConfig;
 import io.lettuce.test.metrics.MetricsReporter;
 import io.lettuce.test.workloads.BaseWorkload;
-import io.lettuce.test.workloads.GetSetPooledWorkload;
 import io.lettuce.test.workloads.GetSetWorkload;
 import io.lettuce.test.workloads.MultiWorkload;
 import io.lettuce.test.workloads.PubSubWorkload;
@@ -34,7 +33,6 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
         return switch (config.getType()) {
             case "redis_commands" -> new RedisCommandsWorkload(connection, options);
             case "get_set" -> new GetSetWorkload(connection, options);
-            case "get_set_pooled" -> new GetSetPooledWorkload(client, options);
             case "multi" -> new MultiWorkload(connection, options);
             case "pub_sub" -> new PubSubWorkload(client, options);
             // async
