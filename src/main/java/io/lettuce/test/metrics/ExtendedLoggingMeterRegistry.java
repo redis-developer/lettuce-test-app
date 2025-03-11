@@ -135,7 +135,7 @@ public class ExtendedLoggingMeterRegistry extends StepMeterRegistry {
                         return;
                     loggingSink.accept(print.id() + " throughput=" + print.unitlessRate(count) + " mean="
                             + print.time(snapshot.mean(getBaseTimeUnit())) + " max="
-                            + print.time(snapshot.max(getBaseTimeUnit())) + " count=" + count + " total="
+                            + print.time(snapshot.max(getBaseTimeUnit())) + " count=" + count + " total_time="
                             + print.time(snapshot.total(getBaseTimeUnit())));
                 }, summary -> {
                     HistogramSnapshot snapshot = summary.takeSnapshot();

@@ -15,7 +15,7 @@
         </encoder>
     </appender>
 
-    <property name="METRICS_TOTAL_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/lettuce-test-app-metrics-total.log}"/>
+    <property name="METRICS_TOTAL_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/lettuce-test-app-metrics-summary.log}"/>
     <appender name="METRICS_TOTAL_FILE" class="ch.qos.logback.core.FileAppender">
         <file>${METRICS_TOTAL_LOG_FILE}</file>
         <encoder>
@@ -26,19 +26,12 @@
 
     <logger name="simple-metrics-reporter" level="DEBUG" additivity="false">
         <appender-ref ref="METRICS_TOTAL_FILE"/>
-        <appender-ref ref="CONSOLE"/>
     </logger>
 
     <logger name="io.lettuce.test.metrics.ExtendedLoggingMeterRegistry" level="DEBUG" additivity="false">
         <appender-ref ref="METRICS_FILE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
-
-    <logger name="io.lettuce.test.metrics.ExtendedLoggingMeterRegistry" level="DEBUG" additivity="false">
-        <appender-ref ref="METRICS_FILE"/>
-        <appender-ref ref="CONSOLE"/>
-    </logger>
-
 
     <logger name="io.lettuce.core.protocol.ConnectionWatchdog" level="DEBUG"/>
     <logger name="io.lettuce.core.protocol.ReconnectionHandler" level="DEBUG"/>
