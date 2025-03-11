@@ -176,6 +176,14 @@ public class DefaultWorkloadOptions implements CommonWorkloadOptions {
 
         public static final Duration DEFAULT_DELAY_AFTER_WORKLOAD = Duration.ZERO;
 
+        public static final String DEFAULT_KEY_PATTERN = "key-%d";
+
+        public static final String DEFAULT_KEY_GENERATION_STRATEGY = "RANDOM";
+
+        public static final int DEFAULT_KEY_RANGE_MIN = 0;
+
+        public static final int DEFAULT_KEY_RANGE_MAX = 10000;
+
     }
 
 }

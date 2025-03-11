@@ -45,8 +45,6 @@
     <logger name="io.lettuce.core.RedisHandshake" level="DEBUG"/>
 
 
-    <logger name="io.lettuce.core" level="INFO" />
-
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />

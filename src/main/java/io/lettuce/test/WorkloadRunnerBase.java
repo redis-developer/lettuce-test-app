@@ -23,10 +23,12 @@ import io.lettuce.test.metrics.ConnectionKey;
 import io.lettuce.test.metrics.MetricsReporter;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.micrometer.core.instrument.Timer;
+import io.netty.channel.local.LocalAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
+import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

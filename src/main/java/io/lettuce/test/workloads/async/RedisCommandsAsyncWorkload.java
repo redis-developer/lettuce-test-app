@@ -13,18 +13,18 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-public class GetSetAsyncWorkload extends BaseWorkload {
+public class RedisCommandsAsyncWorkload extends BaseWorkload {
 
     private final StatefulRedisConnection<String, String> conn;
 
-    public GetSetAsyncWorkload(StatefulRedisConnection<String, String> conn, CommonWorkloadOptions options) {
+    public RedisCommandsAsyncWorkload(StatefulRedisConnection<String, String> conn, CommonWorkloadOptions options) {
         super(options);
         this.conn = conn;
     }
 
     @Override
     public void run() {
-        List<RedisFuture<String>> futures = new ArrayList<>();
+        List<RedisFuture<?>> futures = new ArrayList<>();
 
         RedisAsyncCommands<String, String> cmd = withMetrics(conn.async());
         Random random = new Random();
@@ -33,11 +33,17 @@ public class GetSetAsyncWorkload extends BaseWorkload {
 
         for (int i = 0; i < options().iterationCount(); i++) {
             String key = keyGenerator().nextKey();
-            if (random.nextDouble() < options().getSetRatio()) {
-                futures.add(cmd.set(key, payload));
-            } else {
-                futures.add(cmd.get(key));
+            futures.add(cmd.set(key, payload));
+            futures.add(cmd.get(key));
+            futures.add(cmd.del(key));
+            cmd.incr("counter");
+
+            List<String> payloads = new ArrayList<>();
+            for (int j = 0; j < options().elementsCount(); j++) {
+                payloads.add(payload);
             }
+            cmd.lpush(key + "list", payloads.toArray(new String[0]));
+            cmd.lrange(key + "list", 0, -1);
 
             delay(options().delayAfterIteration());
         }
