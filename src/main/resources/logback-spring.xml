@@ -26,12 +26,6 @@
 
     <logger name="simple-metrics-reporter" level="DEBUG" additivity="false">
         <appender-ref ref="METRICS_TOTAL_FILE"/>
-        <appender-ref ref="CONSOLE"/>
-    </logger>
-
-    <logger name="io.lettuce.test.metrics.ExtendedLoggingMeterRegistry" level="DEBUG" additivity="false">
-        <appender-ref ref="METRICS_FILE"/>
-        <appender-ref ref="CONSOLE"/>
     </logger>
 
     <logger name="io.lettuce.test.metrics.ExtendedLoggingMeterRegistry" level="DEBUG" additivity="false">
