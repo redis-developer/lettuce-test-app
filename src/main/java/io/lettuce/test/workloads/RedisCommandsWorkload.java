@@ -33,7 +33,7 @@ public class RedisCommandsWorkload extends BaseWorkload {
             for (int j = 0; j < options().elementsCount(); j++) {
                 payloads.add(payload);
             }
-            
+
             if (options().elementsCount() < 0) {
                 cmd.lpush(key + "list", payloads.toArray(new String[0]));
                 cmd.lrange(key + "list", 0, -1);
