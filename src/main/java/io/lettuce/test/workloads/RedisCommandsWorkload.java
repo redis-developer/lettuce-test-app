@@ -21,18 +21,20 @@ public class RedisCommandsWorkload extends BaseWorkload {
     public void run() {
         RedisCommands<String, String> cmd = withMetrics(conn.sync());
         String payload = PayloadUtils.randomString(options().valueSize());
-        for (int j = 0; j < options().iterationCount(); j++) {
-            cmd.set("my_key", payload);
-            cmd.get("my_key");
-            cmd.del("my_key");
+
+        for (int i = 0; i < options().iterationCount(); i++) {
+            String key = keyGenerator().nextKey();
+            cmd.set(key, payload);
+            cmd.get(key);
+            cmd.del(key);
             cmd.incr("counter");
 
             List<String> payloads = new ArrayList<>();
-            for (int i = 0; i < options().elementsCount(); i++) {
+            for (int j = 0; j < options().elementsCount(); j++) {
                 payloads.add(payload);
             }
-            cmd.lpush("my_list", payloads.toArray(new String[0]));
-            cmd.lrange("my_list", 0, -1);
+            cmd.lpush(key + "list", payloads.toArray(new String[0]));
+            cmd.lrange(key + "list", 0, -1);
 
             delay(options().delayAfterIteration());
         }

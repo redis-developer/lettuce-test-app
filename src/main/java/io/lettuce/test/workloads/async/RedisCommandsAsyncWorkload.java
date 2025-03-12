@@ -27,8 +27,6 @@ public class RedisCommandsAsyncWorkload extends BaseWorkload {
         List<RedisFuture<?>> futures = new ArrayList<>();
 
         RedisAsyncCommands<String, String> cmd = withMetrics(conn.async());
-        Random random = new Random();
-
         String payload = PayloadUtils.randomString(options().valueSize());
 
         for (int i = 0; i < options().iterationCount(); i++) {
@@ -36,20 +34,21 @@ public class RedisCommandsAsyncWorkload extends BaseWorkload {
             futures.add(cmd.set(key, payload));
             futures.add(cmd.get(key));
             futures.add(cmd.del(key));
-            cmd.incr("counter");
+            futures.add(cmd.incr("counter"));
 
             List<String> payloads = new ArrayList<>();
             for (int j = 0; j < options().elementsCount(); j++) {
                 payloads.add(payload);
             }
-            cmd.lpush(key + "list", payloads.toArray(new String[0]));
-            cmd.lrange(key + "list", 0, -1);
+            futures.add(cmd.lpush(key + "list", payloads.toArray(new String[0])));
+            futures.add(cmd.lrange(key + "list", 0, -1));
 
             delay(options().delayAfterIteration());
         }
 
         if (options().getBoolean("awaitAllResponses", true)) {
             LettuceFutures.awaitAll(1, TimeUnit.MINUTES, futures.toArray(new RedisFuture[futures.size()]));
+            futures.clear();
         }
     }
 
