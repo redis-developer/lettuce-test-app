@@ -14,6 +14,7 @@ runner:
     mode: standalone  # or cluster
     clients: 1 # Number of client instances
     connectionsPerClient: 1  # Number of connections per client
+    threadsPerConnection: 1  # Number of threads sharing same connection
     workload:
       type: get_set_async # Available workload types:
                           # Standalone mode: redis_commands, get_set, multi, pub_sub, get_set_async
@@ -25,12 +26,19 @@ runner:
         #iterationCount: 1000  # How many iterations to run of the workload before finishing
         #elementsCount: 1     # 1 elements per operation E.g how many elements to push with a `lpush`
         #transactionSize: 100    # 100 E.g. how many commands to run in a `multi`
+        #awaitAllResponses: true  # false E.g. whether to await all responses before sending next command batch in GetSetAsyncWorkload
+        #keyGenerationStrategy: RANDOM  # RANDOM Options: RANDOM, SEQUENTIAL;
+        #keyPattern: "key-%d"   # key-%d Key pattern to use for key generation
+        #keyRangeMin: 0         # 0 Minimum key range
+        #keyRangeMax: 10000     # 10000 Maximum key range
 
   #clientOptions:
     #autoReconnect: true
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #pingBeforeActivate: false
+    #requestQueueSize: 2147483647 # 2^31-1 Set the per-connection request queue size.
+                                  # The command invocation will lead to a {@link RedisException} if the queue size is exceeded. Default is {@link Integer#MAX_VALUE}.
     #disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
     #timeoutOptions: # Options to configure command timeouts
     #    fixedTimeout: PT1S # 1 s
