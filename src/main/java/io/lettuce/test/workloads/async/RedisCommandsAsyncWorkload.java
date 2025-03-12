@@ -42,6 +42,7 @@ public class RedisCommandsAsyncWorkload extends BaseWorkload {
             if (options().elementsCount() < 0) {
                 futures.add(cmd.lpush(key + "list", payloads.toArray(new String[0])));
                 futures.add(cmd.lrange(key + "list", 0, -1));
+                futures.add(cmd.ltrim(key + "list", 0, options().elementsCount()));
             }
 
             delay(options().delayAfterIteration());
