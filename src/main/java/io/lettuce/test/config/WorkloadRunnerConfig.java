@@ -164,6 +164,8 @@ public class WorkloadRunnerConfig {
 
         private int connectionsPerClient;
 
+        private int threadsPerConnection;
+
         private WorkloadConfig workload;
 
         // Getters and Setters
@@ -189,6 +191,14 @@ public class WorkloadRunnerConfig {
 
         public void setConnectionsPerClient(int connectionsPerClient) {
             this.connectionsPerClient = connectionsPerClient;
+        }
+
+        public int getThreadsPerConnection() {
+            return threadsPerConnection;
+        }
+
+        public void setThreadsPerConnection(int threadsPerConnection) {
+            this.threadsPerConnection = threadsPerConnection;
         }
 
         public WorkloadConfig getWorkload() {

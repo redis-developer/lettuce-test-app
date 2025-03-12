@@ -12,8 +12,9 @@ runner:
 
   test:
     mode: standalone  # or cluster
-    clients: 2 # Number of client instances
-    connectionsPerClient: 2  # Number of connections per client
+    clients: 1 # Number of client instances
+    connectionsPerClient: 1  # Number of connections per client
+    threadsPerConnection: 1  # Number of threads sharing same connection
     workload:
       type: get_set_async # Available workload types:
                           # Standalone mode: redis_commands, get_set, multi, pub_sub, get_set_async

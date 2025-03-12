@@ -86,12 +86,14 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     private void executeWorkloads(List<C> clients, List<List<Conn>> connections) {
         for (int i = 0; i < clients.size(); i++) {
             for (Conn conn : connections.get(i)) {
-                C client = clients.get(i);
-                BaseWorkload workload = createWorkload(client, conn, config.getTest().getWorkload());
-                workload.metricsReporter(metricsReporter);
-                BaseWorkload withErrorHandler = withErrorHandler(workload, client, conn);
+                for (int j = 0; j < config.getTest().getThreadsPerConnection(); j++) {
+                    C client = clients.get(i);
+                    BaseWorkload workload = createWorkload(client, conn, config.getTest().getWorkload());
+                    workload.metricsReporter(metricsReporter);
+                    BaseWorkload withErrorHandler = withErrorHandler(workload, client, conn);
 
-                submit(withErrorHandler, config.getTest().getWorkload());
+                    submit(withErrorHandler, config.getTest().getWorkload());
+                }
             }
         }
     }
