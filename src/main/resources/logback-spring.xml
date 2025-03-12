@@ -6,6 +6,15 @@
 
     <property name="METRICS_LOG_PATTERN" value="${METRICS_LOG_PATTERN:-%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n}"/>
 
+    <property name="CONFIG_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/lettuce-test-app-config.log}"/>
+    <appender name="CONFIG_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${CONFIG_LOG_FILE}</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+            <charset>${FILE_LOG_CHARSET}</charset>
+        </encoder>
+    </appender>
+
     <property name="METRICS_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/lettuce-test-app-metrics.log}"/>
     <appender name="METRICS_FILE" class="ch.qos.logback.core.FileAppender">
         <file>${METRICS_LOG_FILE}</file>
@@ -37,6 +46,9 @@
     <logger name="io.lettuce.core.protocol.ReconnectionHandler" level="DEBUG"/>
     <logger name="io.lettuce.core.RedisHandshake" level="DEBUG"/>
 
+    <logger name="io.lettuce.test.config.ConfigDumper" level="INFO" additivity="false">
+        <appender-ref ref="CONFIG_FILE"/>
+    </logger>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
