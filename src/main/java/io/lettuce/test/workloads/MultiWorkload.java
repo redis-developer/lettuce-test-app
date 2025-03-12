@@ -23,12 +23,13 @@ public class MultiWorkload extends BaseWorkload {
         String payload = PayloadUtils.randomString(options().valueSize());
 
         for (int i = 0; i < options().iterationCount(); i++) {
+            String key = keyGenerator().nextKey();
             cmd.multi();
             for (int j = 0; j < options().transactionSize(); j++) { // Use commandCount here
                 if (random.nextDouble() < options().getSetRatio()) {
-                    cmd.set("key" + j, payload);
+                    cmd.set(key, payload);
                 } else {
-                    cmd.get("key" + j);
+                    cmd.get(key);
                 }
             }
             cmd.exec();

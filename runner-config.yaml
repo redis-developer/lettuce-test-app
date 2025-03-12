@@ -11,28 +11,28 @@ runner:
     #timeout: 1000s
 
   test:
-    mode: standalone  # or cluster
+    mode: standalone  # standalone or cluster
     clients: 1 # Number of client instances
     connectionsPerClient: 1  # Number of connections per client
     threadsPerConnection: 1  # Number of threads sharing same connection
     workload:
-      type: get_set_async # Available workload types:
+      type: get_set # Available workload types:
                           # Standalone mode: redis_commands, get_set, multi, pub_sub, get_set_async
                           # Cluster mode: get_set
-      maxDuration: PT1M  # Max duration in seconds per workload
+      maxDuration: PT10M  # Max duration in seconds per workload
       options: # Options specific per workload. See below for example configuration of get_set_async workload
-        getSetRatio: 0.5      # 50% of operations are get, 50% are set
-        valueSize: 1        # 100 characters
+        getSetRatio: 0.9      # 50% of operations are get, 50% are set
+        valueSize: 100        # 100 characters
         iterationCount: 1000  # How many iterations to run of the workload before finishing
         #delayAfterIteration: PT0S # 0s  Delay after each iteration
         #delayAfterWorkload: PT1S   # 0s  Delay after each workload
         #elementsCount: 1     # 1 elements per operation E.g how many elements to push with a `lpush`
         #transactionSize: 100    # 100 E.g. how many commands to run in a `multi`
-        #awaitAllResponses: true  # false E.g. whether to await all responses before sending next command batch in GetSetAsyncWorkload
+        #awaitAllResponses: true  # true E.g. whether to await all responses before sending next command batch in GetSetAsyncWorkload
         #keyGenerationStrategy: RANDOM  # RANDOM Options: RANDOM, SEQUENTIAL;
         #keyPattern: "key-%d"   # key-%d Key pattern to use for key generation
-        #keyRangeMin: 0         # 0 Minimum key range
-        #keyRangeMax: 10000     # 10000 Maximum key range
+        keyRangeMin: 0         # 0 Minimum key range
+        keyRangeMax: 1000     # 10000 Maximum key range
   clientOptions:
     autoReconnect: true
     #reconnectOptions:

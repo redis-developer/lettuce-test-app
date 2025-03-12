@@ -25,11 +25,14 @@ public class GetSetClusterWorkload extends BaseWorkload {
         String payload = PayloadUtils.randomString(options().valueSize());
 
         for (int i = 0; i < options().iterationCount(); i++) {
+            String key = keyGenerator().nextKey();
             if (random.nextDouble() < options().getSetRatio()) {
-                cmd.set("key", payload);
+                cmd.set(key, payload);
             } else {
-                cmd.get("key");
+                cmd.get(key);
             }
+
+            delay(options().delayAfterIteration());
         }
     }
 
