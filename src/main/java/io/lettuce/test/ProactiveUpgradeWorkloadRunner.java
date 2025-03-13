@@ -8,6 +8,7 @@ import io.lettuce.core.api.push.PushMessage;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.event.EventBus;
 import io.lettuce.core.proactive.ProactiveWatchdogCommandHandler;
+import io.lettuce.core.protocol.CommandExpiryWriter;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 import io.lettuce.core.resource.ClientResources;
@@ -36,6 +37,7 @@ public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClie
 
     public ProactiveUpgradeWorkloadRunner(WorkloadRunnerConfig config, MetricsReporter metricsReporter) {
         super(config, metricsReporter);
+
     }
 
     @Override
@@ -72,6 +74,11 @@ public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClie
 
         ClientOptions clientOptions = createClientOptions(config.getClientOptions());
         client.setOptions(clientOptions);
+
+        // Hack: Set the global flag to enable proactive reconnect
+        if (config.getClientOptions().getEnableProactive() != null) {
+            CommandExpiryWriter.enableProactive = config.getClientOptions().getEnableProactive();
+        }
 
         return client;
     }

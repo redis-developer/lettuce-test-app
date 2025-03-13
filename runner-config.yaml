@@ -16,7 +16,7 @@ runner:
     connectionsPerClient: 2  # Number of connections per client
     threadsPerConnection: 1  # Number of threads sharing same connection
     workload:
-      type: get_set # Available workload types:
+      type: get_set_async # Available workload types:
                           # Standalone mode: redis_commands, get_set, multi, pub_sub, get_set_async
                           # Cluster mode: get_set
       maxDuration: PT10M  # Max duration in seconds per workload
@@ -34,7 +34,7 @@ runner:
         keyRangeMin: 0         # 0 Minimum key range
         keyRangeMax: 1000     # 10000 Maximum key range
   clientOptions:
-    proactiveReconnect: true
+    #enableProactive: true
     autoReconnect: true
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts

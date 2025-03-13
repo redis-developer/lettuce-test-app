@@ -259,6 +259,8 @@ public class WorkloadRunnerConfig {
 
     public static class ClientOptionsConfig {
 
+        private Boolean enableProactive;
+
         private Boolean autoReconnect;
 
         private Boolean pingBeforeActivate;
@@ -274,6 +276,14 @@ public class WorkloadRunnerConfig {
         private ReconnectOptionsConfig reconnectOptions;
 
         // Getters and Setters
+        public Boolean getEnableProactive() {
+            return enableProactive;
+        }
+
+        public void setEnableProactive(Boolean enableProactive) {
+            this.enableProactive = enableProactive;
+        }
+
         public Boolean getAutoReconnect() {
             return autoReconnect;
         }
