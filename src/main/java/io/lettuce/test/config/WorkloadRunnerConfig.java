@@ -500,6 +500,8 @@ public class WorkloadRunnerConfig {
 
         private Duration fixedTimeout;
 
+        private Duration proactiveTimeoutsRelaxing;
+
         // Getters and Setters
         public Duration getFixedTimeout() {
             return fixedTimeout;
@@ -509,9 +511,19 @@ public class WorkloadRunnerConfig {
             this.fixedTimeout = fixedTimeout;
         }
 
+        public Duration getProactiveTimeoutsRelaxing() {
+            return proactiveTimeoutsRelaxing;
+        }
+
+        public void setProactiveTimeoutsRelaxing(Duration proactiveTimeoutsRelaxing) {
+            this.proactiveTimeoutsRelaxing = proactiveTimeoutsRelaxing;
+        }
+
+
         @Override
         public String toString() {
-            return "TimeoutOptionsConfig{" + "fixedTimeout=" + fixedTimeout + '}';
+            return "TimeoutOptionsConfig{" + "fixedTimeout=" + fixedTimeout + ",proactiveExpiryRelaxTime=" + proactiveTimeoutsRelaxing
+                    + '}';
         }
 
     }

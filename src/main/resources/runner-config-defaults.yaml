@@ -36,6 +36,7 @@ runner:
     #autoReconnect: true
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
+    #  proactiveTimeoutsRelaxing: PT0.500S # 500 ms
     #pingBeforeActivate: false
     #requestQueueSize: 2147483647 # 2^31-1 Set the per-connection request queue size.
                                   # The command invocation will lead to a {@link RedisException} if the queue size is exceeded. Default is {@link Integer#MAX_VALUE}.

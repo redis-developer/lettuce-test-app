@@ -11,7 +11,7 @@ runner:
     #timeout: 1000s
 
   test:
-    mode: standalone  # standalone or cluster
+    mode: proactive_upgrade  # standalone, cluster or proactive_upgrade
     clients: 1 # Number of client instances
     connectionsPerClient: 1  # Number of connections per client
     threadsPerConnection: 1  # Number of threads sharing same connection
@@ -46,6 +46,7 @@ runner:
     #disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
     #timeoutOptions: # Options to configure command timeouts
     #    fixedTimeout: PT1S # 1 s
+    #    proactiveTimeoutsRelaxing: PT0.500S # 500 ms
     #socketOptions:  # Options to configure low-level socket options for the connections kept to Redis servers.
     #  connectTimeout: PT10S # 10 s
     #  tcpUserTimeoutOptions:

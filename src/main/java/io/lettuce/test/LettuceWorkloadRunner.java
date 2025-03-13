@@ -25,11 +25,21 @@ public class LettuceWorkloadRunner {
 
     public void run() {
 
-        boolean isCluster = "cluster".equalsIgnoreCase(config.getTest().getMode());
-        if (isCluster) {
-            runner = new ClusterWorkloadRunner(config, metricsReporter);
-        } else {
-            runner = new StandaloneWorkloadRunner(config, metricsReporter);
+        switch (config.getTest().getMode().toUpperCase()) {
+            case "STANDALONE":
+                runner = new StandaloneWorkloadRunner(config, metricsReporter);
+                log.info("Running standalone workload");
+                break;
+            case "CLUSTER":
+                runner = new ClusterWorkloadRunner(config, metricsReporter);
+                log.info("Running cluster workload");
+                break;
+            case "PROACTIVE_UPGRADE":
+                runner = new ProactiveUpgradeWorkloadRunner(config, metricsReporter);
+                log.info("Running proactive_upgrade workload");
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid mode specified: " + config.getTest().getMode());
         }
 
         runner.run();

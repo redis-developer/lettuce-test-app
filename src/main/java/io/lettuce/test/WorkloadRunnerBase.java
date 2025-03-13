@@ -34,6 +34,7 @@ import reactor.core.publisher.Flux;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -318,6 +319,19 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         if (config.getFixedTimeout() != null) {
             builder.fixedTimeout(config.getFixedTimeout());
         }
+
+        if(config.getProactiveTimeoutsRelaxing() != null) {
+            try {
+                Method proactiveTimeoutsRelaxingMethod = builder.getClass()
+                        .getMethod("proactiveTimeoutsRelaxing", Duration.class);
+                proactiveTimeoutsRelaxingMethod.invoke(builder, config.getProactiveTimeoutsRelaxing());
+                log.info("ProactiveTimeoutsRelaxingMethod enabled successfully.");
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException("The method 'proactiveTimeoutsRelaxing' is not available in this build.", e);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException("Failed to invoke 'proactiveTimeoutsRelaxing' method.", e);
+            }
+        }
     }
 
     private void applySocketOptions(SocketOptions.Builder builder, SocketOptionsConfig config) {
@@ -394,6 +408,7 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             Method connectionMonitorMethod = resourceBuilder.getClass().getMethod("connectionMonitor", connectionMonitorClass);
 
             connectionMonitorMethod.invoke(resourceBuilder, monitor);
+            log.info("MicrometerConnectionMonitor configured successfully.");
         } catch (ClassNotFoundException e) {
             log.warn("MicrometerConnectionMonitor or ConnectionMonitor class not found. Skipping connection monitoring.");
         } catch (NoSuchMethodException e) {
@@ -418,6 +433,7 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             Method queueMonitorMethod = resourceBuilder.getClass().getMethod("endpointQueueMonitor", queueMonitorClass);
 
             queueMonitorMethod.invoke(resourceBuilder, queueMonitor);
+            log.info("MicrometerQueueMonitor configured successfully.");
         } catch (ClassNotFoundException e) {
             log.warn("MicrometerQueueMonitor or QueueMonitor class not found. Skipping connection monitoring.");
         } catch (NoSuchMethodException e) {
