@@ -33,15 +33,6 @@ public class LettuceWorkloadRunner {
         }
 
         runner.run();
-
-        // Wait for runner to finish
-        runner.awaitTermination();
-
-        try {
-            runner.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @PreDestroy

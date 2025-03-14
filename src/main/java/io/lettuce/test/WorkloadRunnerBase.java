@@ -40,8 +40,6 @@ import java.util.concurrent.TimeUnit;
 public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn extends StatefulConnection<?, ?>>
         implements AutoCloseable {
 
-    private static final long SHUTDOWN_DELAY = Duration.ofSeconds(1).toSeconds();
-
     private static final Logger log = LoggerFactory.getLogger(WorkloadRunnerBase.class);
 
     private final MetricsReporter metricsReporter;
@@ -49,6 +47,8 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     WorkloadRunnerConfig config;
 
     ExecutorService executor = Executors.newCachedThreadPool();
+
+    List<C> clients = new ArrayList<>();
 
     Workloads submittedWorkloads = new Workloads();
 
@@ -60,7 +60,6 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     public final void run() {
         RedisURI redisUri = buildRedisUri(config.getRedis());
 
-        List<C> clients = new ArrayList<>();
         List<List<Conn>> connections = new ArrayList<>();
 
         // Create the specified number of client instances
@@ -80,10 +79,18 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             }
         }
 
-        executeWorkloads(clients, connections);
+        try {
+            CompletableFuture<Void> workloadsFuture = executeWorkloads(clients, connections);
+            workloadsFuture.thenRun(() -> log.info("All tasks completed. Exiting..."));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            executor.shutdown();
+        }
     }
 
-    private void executeWorkloads(List<C> clients, List<List<Conn>> connections) {
+    private CompletableFuture<Void> executeWorkloads(List<C> clients, List<List<Conn>> connections) {
+        List<CompletableFuture<?>> futures = new ArrayList<>();
         for (int i = 0; i < clients.size(); i++) {
             for (Conn conn : connections.get(i)) {
                 for (int j = 0; j < config.getTest().getThreadsPerConnection(); j++) {
@@ -92,10 +99,12 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
                     workload.metricsReporter(metricsReporter);
                     BaseWorkload withErrorHandler = withErrorHandler(workload, client, conn);
 
-                    submit(withErrorHandler, config.getTest().getWorkload());
+                    futures.add(submit(withErrorHandler, config.getTest().getWorkload()));
                 }
             }
         }
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
     }
 
     private C tryCreateClient(RedisURI redisUri, WorkloadRunnerConfig config) {
@@ -139,14 +148,15 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
 
     protected abstract Conn createConnection(C client, WorkloadRunnerConfig config);
 
-    protected CompletableFuture<?> submit(BaseWorkload task, WorkloadConfig config) {
+    protected CompletableFuture<ContinousWorkload> submit(BaseWorkload task, WorkloadConfig config) {
         ContinousWorkload workload = new ContinousWorkload(task, config);
-        CompletableFuture<Void> future = CompletableFuture.runAsync(workload, executor).whenComplete((result, throwable) -> {
-            submittedWorkloads.remove(workload);
-            if (throwable != null) {
-                log.error("Workload failed: ", throwable);
-            }
-        });
+        CompletableFuture<ContinousWorkload> future = CompletableFuture.runAsync(workload::run, executor)
+                .whenComplete((result, throwable) -> {
+                    submittedWorkloads.remove(workload);
+                    if (throwable != null) {
+                        log.error("Workload failed: ", throwable);
+                    }
+                }).thenApply(v -> workload);
         submittedWorkloads.add(workload);
         return future;
     }
@@ -192,36 +202,25 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     }
 
     public void close() {
+        log.info("Workload Runner stopping...");
         submittedWorkloads.stop();
 
         if (executor != null) {
             executor.shutdown();
             try {
-                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                     executor.shutdownNow();
                 }
             } catch (InterruptedException e) {
                 executor.shutdownNow();
             }
         }
-    }
 
-    public void awaitTermination() {
-
-        long maxTime = config.getTest().getWorkload().getMaxDuration().toSeconds();
-        long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(maxTime + SHUTDOWN_DELAY);
-
-        // Wait until the queue is empty or timeout is reached
-        while (!submittedWorkloads.isEmpty() && System.currentTimeMillis() < deadline) {
-            log.debug("Waiting for tasks to finish and queue to be empty...");
-            try {
-                Thread.sleep(2000); // Check every 500 ms
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Interrupted while waiting for tasks to complete", e);
-            }
+        for (C client : clients) {
+            client.shutdown();
         }
 
-        executor.shutdownNow();
+        log.info("Workload Runner stopped.");
     }
 
     private void subscribeToReconnectEvents(EventBus eventBus) {

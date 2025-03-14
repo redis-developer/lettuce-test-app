@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ContinousWorkload implements Runnable {
+public class ContinousWorkload {
 
     protected static final Logger log = LoggerFactory.getLogger(ContinousWorkload.class);
 
@@ -30,7 +30,6 @@ public class ContinousWorkload implements Runnable {
         this.workload = workload;
     }
 
-    @Override
     public void run() {
         long startTime = System.currentTimeMillis();
         log.info("Workload started. {} ", config);
@@ -80,6 +79,7 @@ public class ContinousWorkload implements Runnable {
     }
 
     public void stop() {
+        log.info("Stopping workload {}", config);
         running.getAndSet(false);
     }
 

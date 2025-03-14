@@ -23,7 +23,7 @@ import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DE
  * Workloads implementations are not thread safe and should not shared between threads.
  *
  */
-public abstract class BaseWorkload implements Runnable {
+public abstract class BaseWorkload {
 
     private static final Logger log = LoggerFactory.getLogger(BaseWorkload.class);
 
@@ -43,6 +43,8 @@ public abstract class BaseWorkload implements Runnable {
         this.options = options;
         this.keyGenerator = createKeyGenerator(options);
     }
+
+    public abstract void run();
 
     public void metricsReporter(MetricsReporter metricsReporter) {
         this.metricsReporter = metricsReporter;
