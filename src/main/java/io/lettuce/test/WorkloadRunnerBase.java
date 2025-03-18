@@ -11,6 +11,8 @@ import io.lettuce.core.event.EventBus;
 import io.lettuce.core.event.connection.ReconnectAttemptEvent;
 import io.lettuce.core.event.connection.ReconnectEventHelper;
 import io.lettuce.core.event.connection.ReconnectFailedEvent;
+import io.lettuce.core.metrics.MicrometerCommandLatencyRecorder;
+import io.lettuce.core.metrics.MicrometerOptions;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.Delay;
 import io.lettuce.test.config.WorkloadRunnerConfig;
@@ -22,12 +24,15 @@ import io.lettuce.test.config.WorkloadRunnerConfig.WorkloadConfig;
 import io.lettuce.test.metrics.ConnectionKey;
 import io.lettuce.test.metrics.MetricsReporter;
 import io.lettuce.test.workloads.BaseWorkload;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import io.netty.channel.local.LocalAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -249,6 +254,27 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         if (config.getReconnectOptions() != null) {
             applyReconnectOptionsConfig(resourceBuilder, config.getReconnectOptions());
         }
+
+        if (config.getMetricsOptions() != null) {
+            applyMetricsOptionsConfig(resourceBuilder, config.getMetricsOptions());
+        }
+    }
+
+    private void applyMetricsOptionsConfig(ClientResources.Builder resourceBuilder,
+            WorkloadRunnerConfig.MetricsOptionsConfig config) {
+        MicrometerOptions options = MicrometerOptions.create();
+        if (config.getConnectionMonitoring() != null && config.getConnectionMonitoring()) {
+            // MicrometerConnectionMonitor monitor = new MicrometerConnectionMonitor(metricsReporter.getMeterRegistry(),
+            // options);
+            // resourceBuilder.connectionMonitor(monitor).build();
+            OptionalMicrometerConnectionMonitor.applyMetricsOptionsConfig(resourceBuilder, metricsReporter.getMeterRegistry());
+        }
+
+        if (config.getCommandLatencyMonitoring() != null && config.getCommandLatencyMonitoring()) {
+            MicrometerCommandLatencyRecorder monitor = new MicrometerCommandLatencyRecorder(metricsReporter.getMeterRegistry(),
+                    options);
+            resourceBuilder.commandLatencyRecorder(monitor).build();
+        }
     }
 
     private void applyReconnectOptionsConfig(ClientResources.Builder resourceBuilder,
@@ -333,6 +359,41 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         if (config.getCount() != null) {
             builder.count(config.getCount());
         }
+    }
+
+    // This class is a workaround to avoid a compile-time dependency on Lettuce's MicrometerConnectionMonitor class
+    // which is not available in the Lettuce core module yet
+    // Once the MicrometerConnectionMonitor class is available in the core module, this class can be removed
+    static class OptionalMicrometerConnectionMonitor {
+
+        private static final Logger log = LoggerFactory.getLogger(OptionalMicrometerConnectionMonitor.class);
+
+        public static void applyMetricsOptionsConfig(ClientResources.Builder resourceBuilder, MeterRegistry meterRegistry) {
+            try {
+                Class<?> connectionMonitorClass = Class.forName("io.lettuce.core.metrics.ConnectionMonitor");
+
+                Class<?> micrometerConnectionMonitorClass = Class
+                        .forName("io.lettuce.core.metrics.MicrometerConnectionMonitor");
+
+                MicrometerOptions options = MicrometerOptions.create();
+                Constructor<?> constructor = micrometerConnectionMonitorClass.getConstructor(MeterRegistry.class,
+                        MicrometerOptions.class);
+                Object monitor = constructor.newInstance(meterRegistry, options);
+
+                Method connectionMonitorMethod = resourceBuilder.getClass().getMethod("connectionMonitor",
+                        connectionMonitorClass);
+
+                connectionMonitorMethod.invoke(resourceBuilder, monitor);
+
+            } catch (ClassNotFoundException e) {
+                log.warn("MicrometerConnectionMonitor or ConnectionMonitor class not found. Skipping connection monitoring.");
+            } catch (NoSuchMethodException e) {
+                log.warn("connectionMonitor method not found in ClientResources.Builder. Skipping connection monitoring.");
+            } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
+                log.error("Failed to invoke connectionMonitor method", e);
+            }
+        }
+
     }
 
 }

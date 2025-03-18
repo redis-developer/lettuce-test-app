@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Proxy;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -70,6 +71,10 @@ public class MetricsReporter {
         this.reconnectAttemptTotalCounter = createReconnectAttemptTotalCounter();
         this.reconnectFailureTotalCounter = createReconnectFailedAttempTotalCounter();
         this.taskScheduler = taskScheduler;
+    }
+
+    public MeterRegistry getMeterRegistry() {
+        return meterRegistry;
     }
 
     public Timer.Sample startConnectionTimer() {
@@ -170,7 +175,7 @@ public class MetricsReporter {
         }
 
         log.info("--- Metric Summary --- ");
-        simpleMeterRegistry.getMeters().forEach(meter -> {
+        simpleMeterRegistry.getMeters().stream().sorted(Comparator.comparing((m) -> m.getId().getName())).forEach(meter -> {
             if (meter instanceof Counter) {
                 Counter counter = (Counter) meter;
                 log.info("Counter: " + counter.getId() + " value: " + counter.count());

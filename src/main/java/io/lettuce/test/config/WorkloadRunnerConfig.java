@@ -273,6 +273,8 @@ public class WorkloadRunnerConfig {
 
         private ReconnectOptionsConfig reconnectOptions;
 
+        private MetricsOptionsConfig metricsOptions;
+
         // Getters and Setters
         public Boolean getAutoReconnect() {
             return autoReconnect;
@@ -336,6 +338,38 @@ public class WorkloadRunnerConfig {
                     + ", requestQueueSize=" + requestQueueSize + ", timeoutOptions=" + timeoutOptions + ", socketOptions="
                     + socketOptions + ", disconnectedBehavior='" + disconnectedBehavior + '\'' + ", reconnectOptions="
                     + reconnectOptions + '}';
+        }
+
+        public MetricsOptionsConfig getMetricsOptions() {
+            return metricsOptions;
+        }
+
+        public void setMetricsOptions(MetricsOptionsConfig metricsOptions) {
+            this.metricsOptions = metricsOptions;
+        }
+
+    }
+
+    public static class MetricsOptionsConfig {
+
+        private Boolean connectionMonitoring;
+
+        private Boolean commandLatencyMonitoring;
+
+        public Boolean getConnectionMonitoring() {
+            return connectionMonitoring;
+        }
+
+        public void setConnectionMonitoring(Boolean connectionMonitoring) {
+            this.connectionMonitoring = connectionMonitoring;
+        }
+
+        public Boolean getCommandLatencyMonitoring() {
+            return commandLatencyMonitoring;
+        }
+
+        public void setCommandLatencyMonitoring(Boolean commandLatencyMonitoring) {
+            this.commandLatencyMonitoring = commandLatencyMonitoring;
         }
 
     }
