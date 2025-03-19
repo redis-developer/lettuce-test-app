@@ -137,3 +137,40 @@ Example query for visualising throughput per second of get on 10s window
  | `lettuce.reconnect.failures`| Counter | Counts the number of failed Redis reconnect attempts.                                                 | `epid`: Endpoint ID, `local`: Local address, `remote`: Remote address                             |
  | `redis.command.latency`     | Timer   | Measures the execution time of Redis commands from API invocation until command completion.           | `command`: Redis command (e.g., `GET`, `SET`)                                                      |
  | `redis.command.errors`      | Counter | Counts the number of failed Redis command API calls that completed with an exception.                 | `command`: Redis command (e.g., `GET`, `SET`)                                                      |
+
+### Lettuce App Custom Metrics
+Modified version of lettuce with additional metrics is available at [lettuce-metrics](https://github.com/ggivo/lettuce/tree/lettuce-observability)
+To use this version, you need to build the project and replace the lettuce version in the `pom.xml` file with the built jar file.
+
+**Steps to build and replace the lettuce jar file:**
+```shell
+git clone -b lettuce-observability https://github.com/ggivo/lettuce/ lettuce-obervability
+cd lettuce-observability
+mvn clean install -DskipTests
+```
+**Make sure lettuce version in the `pom.xml` file is updated to the built jar file.**
+```xml
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>6.7.0.BUILD-SNAPSHOT</version>
+        </dependency>
+```
+**Last step is to build the lettuce-test-app with the updated lettuce jar file.**
+```shell
+mvn clean package
+```
+
+Following additional metrics are available in the modified lettuce version:
+
+
+| Metric Name                | Type    | Description                                                                 | Tags                                                                                                                                                                                                        |
+|----------------------------|---------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `lettuce.connection.inactive.duration`   | Timer   | Measures the duration connection was in inactive state during reconnection. | epid                                                                                                                                                                                                        |
+| `lettuce.reconnection.attempts.count`   | Counter | Number of reconnection attempts.                                            | epid. <br> Note: this metric is similar to `lettuce.reconnect.attempts`  but is reported directly by  lettuc elient (not by the app) and is tagged per epid (e.g not taged with `local` and `remote` tags). |
+
+Example : 
+```   
+ Counter: MeterId{name='lettuce.reconnection.attempts.count', tags=[tag(epid=0x1),tag(runId=${runId:get_set_async-8szygeLU)]} value: 11.0
+ Timer: MeterId{name='lettuce.connection.inactive.duration', tags=[tag(epid=0x1),tag(runId=${runId:get_set_async-8szygeLU)]} count: 1 total time: 45587.98
+```
