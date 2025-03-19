@@ -164,10 +164,10 @@ mvn clean package
 Following additional metrics are available in the modified lettuce version:
 
 
-| Metric Name                | Type    | Description                                                                 | Tags                                                                                                                                                                                                        |
-|----------------------------|---------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `lettuce.connection.inactive.duration`   | Timer   | Measures the duration connection was in inactive state during reconnection. | epid                                                                                                                                                                                                        |
-| `lettuce.reconnection.attempts.count`   | Counter | Number of reconnection attempts.                                            | epid. <br> Note: this metric is similar to `lettuce.reconnect.attempts`  but is reported directly by  lettuc elient (not by the app) and is tagged per epid (e.g not taged with `local` and `remote` tags). |
+| Metric Name                | Type    | Description                                                                 | Tags                                                                                                                                                                                                  |
+|----------------------------|---------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `lettuce.connection.inactive.duration`   | Timer   | Measures the duration connection was in inactive state during reconnection. | epid                                                                                                                                                                                                  |
+| `lettuce.reconnection.attempts.count`   | Counter | Number of reconnection attempts.                                            | epid. <br> Note: this metric is similar to `lettuce.reconnect.attempts`  but is reported directly by Lettuce client itself  and is counted per `epid` (e.g not taged with `local` and `remote` tags). |
 
 Example : 
 ```   
