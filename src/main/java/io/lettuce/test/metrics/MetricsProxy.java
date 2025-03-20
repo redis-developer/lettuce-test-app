@@ -2,12 +2,16 @@ package io.lettuce.test.metrics;
 
 import io.lettuce.core.RedisFuture;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class MetricsProxy<T> implements InvocationHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(MetricsProxy.class);
 
     private final T target;
 
@@ -35,6 +39,7 @@ public class MetricsProxy<T> implements InvocationHandler {
                 command.whenComplete((res, ex) -> {
                     if (ex != null) {
                         metricsReporter.incrementCommandError(commandName);
+                        log.error("Command failed", ex);
                     }
                     metricsReporter.recordCommandLatency(commandName, sample);
                 });
