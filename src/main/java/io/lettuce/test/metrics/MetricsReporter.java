@@ -1,6 +1,7 @@
 package io.lettuce.test.metrics;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -183,6 +184,9 @@ public class MetricsReporter {
                 Timer timer = (Timer) meter;
                 log.info("Timer: " + timer.getId() + " count: " + timer.count() + " total time: "
                         + timer.totalTime(TimeUnit.MILLISECONDS));
+            } else if (meter instanceof Gauge) {
+                Gauge gauge = (Gauge) meter;
+                log.info("Gauge: " + gauge.getId() + " value: " + gauge.value());
             }
         });
     }

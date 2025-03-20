@@ -33,8 +33,6 @@ import reactor.core.publisher.Flux;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.SocketAddress;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -369,31 +367,62 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         private static final Logger log = LoggerFactory.getLogger(OptionalMicrometerConnectionMonitor.class);
 
         public static void applyMetricsOptionsConfig(ClientResources.Builder resourceBuilder, MeterRegistry meterRegistry) {
-            try {
-                Class<?> connectionMonitorClass = Class.forName("io.lettuce.core.metrics.ConnectionMonitor");
+            MicrometerOptions options = MicrometerOptions.create();
 
-                Class<?> micrometerConnectionMonitorClass = Class
-                        .forName("io.lettuce.core.metrics.MicrometerConnectionMonitor");
+            configureConnectionMonitor(resourceBuilder, meterRegistry, options);
 
-                MicrometerOptions options = MicrometerOptions.create();
-                Constructor<?> constructor = micrometerConnectionMonitorClass.getConstructor(MeterRegistry.class,
-                        MicrometerOptions.class);
-                Object monitor = constructor.newInstance(meterRegistry, options);
+            configureQueueMonitor(resourceBuilder, meterRegistry, options);
 
-                Method connectionMonitorMethod = resourceBuilder.getClass().getMethod("connectionMonitor",
-                        connectionMonitorClass);
-
-                connectionMonitorMethod.invoke(resourceBuilder, monitor);
-
-            } catch (ClassNotFoundException e) {
-                log.warn("MicrometerConnectionMonitor or ConnectionMonitor class not found. Skipping connection monitoring.");
-            } catch (NoSuchMethodException e) {
-                log.warn("connectionMonitor method not found in ClientResources.Builder. Skipping connection monitoring.");
-            } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
-                log.error("Failed to invoke connectionMonitor method", e);
-            }
         }
 
+    }
+
+    private static void configureConnectionMonitor(ClientResources.Builder resourceBuilder, MeterRegistry meterRegistry,
+            MicrometerOptions options) {
+        try {
+            Class<?> connectionMonitorClass = Class.forName("io.lettuce.core.metrics.ConnectionMonitor");
+
+            Class<?> micrometerConnectionMonitorClass = Class.forName("io.lettuce.core.metrics.MicrometerConnectionMonitor");
+
+            Constructor<?> constructor = micrometerConnectionMonitorClass.getConstructor(MeterRegistry.class,
+                    MicrometerOptions.class);
+
+            Object monitor = constructor.newInstance(meterRegistry, options);
+
+            Method connectionMonitorMethod = resourceBuilder.getClass().getMethod("connectionMonitor", connectionMonitorClass);
+
+            connectionMonitorMethod.invoke(resourceBuilder, monitor);
+        } catch (ClassNotFoundException e) {
+            log.warn("MicrometerConnectionMonitor or ConnectionMonitor class not found. Skipping connection monitoring.");
+        } catch (NoSuchMethodException e) {
+            log.warn("connectionMonitor method not found in ClientResources.Builder. Skipping connection monitoring.");
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
+            log.error("Failed to invoke connectionMonitor method", e);
+        }
+    }
+
+    private static void configureQueueMonitor(ClientResources.Builder resourceBuilder, MeterRegistry meterRegistry,
+            MicrometerOptions options) {
+        try {
+            Class<?> queueMonitorClass = Class.forName("io.lettuce.core.metrics.EndpointQueueMonitor");
+
+            Class<?> micrometerQueueMonitor = Class.forName("io.lettuce.core.metrics.MicrometerQueueMonitor");
+
+            Constructor<?> queueMonitorConstructor = micrometerQueueMonitor.getConstructor(MeterRegistry.class,
+                    MicrometerOptions.class);
+
+            Object queueMonitor = queueMonitorConstructor.newInstance(meterRegistry, options);
+
+            Method queueMonitorMethod = resourceBuilder.getClass().getMethod("endpointQueueMonitor", queueMonitorClass);
+
+            queueMonitorMethod.invoke(resourceBuilder, queueMonitor);
+        } catch (ClassNotFoundException e) {
+            log.warn("MicrometerQueueMonitor or QueueMonitor class not found. Skipping connection monitoring.");
+        } catch (NoSuchMethodException e) {
+            log.warn("endpointQueueMonitor method not found in ClientResources.Builder. Skipping connection monitoring.");
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
+            log.error("Failed to invoke endpointQueueMonitor method", e);
+        }
     }
 
 }

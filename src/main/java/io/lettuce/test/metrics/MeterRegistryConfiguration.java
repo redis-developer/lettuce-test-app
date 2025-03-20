@@ -13,7 +13,7 @@ import org.springframework.core.env.Environment;
 @Configuration(proxyBeanMethods = false)
 public class MeterRegistryConfiguration {
 
-    @Value("${runId:${runner.test.workload.type}-#{T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(8)}")
+    @Value("${runId:${runner.test.workload.type}-#{T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(8)}}")
     private String runId;
 
     @Bean
