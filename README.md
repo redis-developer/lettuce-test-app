@@ -144,16 +144,18 @@ To use this version, you need to build the project and replace the lettuce versi
 
 **Steps to build and replace the lettuce jar file:**
 ```shell
-git clone -b lettuce-observability https://github.com/ggivo/lettuce/ lettuce-obervability
+git clone -b lettuce-observability https://github.com/ggivo/lettuce/ lettuce-observability
 cd lettuce-observability
 mvn clean install -DskipTests
 ```
+Write down the version of the built jar file. It will be used in the next step.
+
 **Make sure lettuce version in the `pom.xml` file is updated to the built jar file.**
 ```xml
         <dependency>
             <groupId>io.lettuce</groupId>
             <artifactId>lettuce-core</artifactId>
-            <version>6.7.0.BUILD-SNAPSHOT</version>
+            <version>{PROVIDE_CUSTOM_LETTUCE_VERSION}</version>
         </dependency>
 ```
 **Last step is to build the lettuce-test-app with the updated lettuce jar file.**

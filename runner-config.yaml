@@ -2,7 +2,7 @@ runner:
   redis:
     clientName: "lettuce-test-app"
     host: localhost
-    port: 6479
+    port: 6379
     useTls: false
     #username: "default"
     #password: "password"
