@@ -35,8 +35,8 @@ runner:
         keyRangeMax: 1000     # 10000 Maximum key range
   clientOptions:
     metricsOptions:
-      commandLatencyMonitoring: true
-      connectionMonitoring: true
+      commandLatencyMonitoring: true # Enables Lettuce internal command latency monitoring
+      connectionMonitoring: true     # Enables Additional metrics for connection inacive time. Note supported with GA build of lettuce, and required custom Lettuce client build.  See README.md for instruction ho to enable them
     autoReconnect: true
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts

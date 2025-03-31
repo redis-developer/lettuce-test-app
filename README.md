@@ -163,16 +163,24 @@ Write down the version of the built jar file. It will be used in the next step.
 mvn clean package
 ```
 
+Additional metrics aer enabled/disabled via configuration property in the `runner-config.yaml` file:
+```yaml
+runner:
+  clientOptions:
+    metricsOptions:
+      commandLatencyMonitoring: true
+      connectionMonitoring: true
+```
 Following additional metrics are available in the modified lettuce version:
 
 
 | Metric Name                | Type    | Description                                                                 | Tags                                                                                                                                                                                                  |
 |----------------------------|---------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `lettuce.connection.inactive.duration`   | Timer   | Measures the duration connection was in inactive state during reconnection. | epid                                                                                                                                                                                                  |
+| `lettuce.reconnection.attempts.count`   | Timer   | Measures the duration connection was in inactive state during reconnection. | epid                                                                                                                                                                                                  |
 | `lettuce.reconnection.attempts.count`   | Counter | Number of reconnection attempts.                                            | epid. <br> Note: this metric is similar to `lettuce.reconnect.attempts`  but is reported directly by Lettuce client itself  and is counted per `epid` (e.g not taged with `local` and `remote` tags). |
 
 Example : 
 ```   
  Counter: MeterId{name='lettuce.reconnection.attempts.count', tags=[tag(epid=0x1),tag(runId=${runId:get_set_async-8szygeLU)]} value: 11.0
- Timer: MeterId{name='lettuce.connection.inactive.duration', tags=[tag(epid=0x1),tag(runId=${runId:get_set_async-8szygeLU)]} count: 1 total time: 45587.98
+ Timer: MeterId{name='lettuce.reconnection.inactive.duration', tags=[tag(epid=0x1),tag(runId=${runId:get_set_async-8szygeLU)]} count: 1 total time: 45587.98
 ```
