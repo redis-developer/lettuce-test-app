@@ -18,7 +18,7 @@ runner:
     workload:
       type: get_set_async # Available workload types:
                           # Standalone mode: redis_commands, get_set, multi, pub_sub, get_set_async
-                          # Cluster mode: get_set
+                          # Cluster mode: get_set, get_set_async, pub_sub, redis_commands, redis_commands_async
       maxDuration: PT60S  # Max duration in seconds per workload
       #options: # Options specific per workload. See below for example configuration of get_set_async workload
         #getSetRatio: 0.5      # 50% of operations are get, 50% are set

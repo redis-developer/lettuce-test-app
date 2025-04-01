@@ -10,7 +10,8 @@ import io.lettuce.test.config.WorkloadRunnerConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.WorkloadConfig;
 import io.lettuce.test.metrics.MetricsReporter;
 import io.lettuce.test.workloads.BaseWorkload;
-import io.lettuce.test.workloads.cluster.GetSetClusterWorkload;
+import io.lettuce.test.workloads.async.RedisCommandsAsyncWorkload;
+import io.lettuce.test.workloads.cluster.*;
 
 public class ClusterWorkloadRunner
         extends WorkloadRunnerBase<RedisClusterClient, StatefulRedisClusterConnection<String, String>> {
@@ -46,6 +47,10 @@ public class ClusterWorkloadRunner
         CommonWorkloadOptions options = DefaultWorkloadOptions.create(config.getOptions());
         return switch (config.getType()) {
             case "get_set" -> new GetSetClusterWorkload(connection, options);
+            case "get_set_async" -> new GetSetAsyncClusterWorkload(connection, options);
+            case "pub_sub" -> new PubSubClusterWorkload(client, options);
+            case "redis_commands" -> new RedisCommandsClusterWorkload(connection, options);
+            case "redis_commands_async" -> new RedisCommandsClusterAsyncWorkload(connection, options);
             default -> throw new IllegalArgumentException("Unsupported workload." + config.getType());
         };
     }

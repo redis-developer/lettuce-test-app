@@ -50,18 +50,23 @@ By:
 
 ### RedisClient
 
-| Alias          | Class                | Description                                                                          | Supported Options                                     |
-|----------------|----------------------|--------------------------------------------------------------------------------------|-------------------------------------------------------|
-| get_set        | `GetSetWorkload`     | Performs a mix of GET and SET operations with a specified ratio and value size.      | `getSetRatio`, `valueSize`, `iterationCount`          |
-| get_set_async  | `GetSetAsyncWorkload`| Performs asynchronous GET and SET operations with a specified ratio and value size.  | `getSetRatio`, `valueSize`, `iterationCount`          |
-| redis_commands | `RedisCommandsWorkload` | Executes a specified number of get/set/del/incr/lpush/lrange commands.               | `valueSize`, `elementsCount`, `iterationCount`        |
-| multi          | `MultiWorkload`      | Executes get/set in MULTI/EXEC transactions with a specified size and command count. | `transactionSize`, `iterationCount`, `valueSize`, `getSetRatio` |
-| pub_sub        | `PubSubWorkload`     | Publishes and subscribes to messages on a specified channel.                         |          |
+| Alias                | Class                        | Description                                                                          | Supported Options                                     |
+|----------------------|------------------------------|--------------------------------------------------------------------------------------|-------------------------------------------------------|
+| get_set              | `GetSetWorkload`             | Performs a mix of GET and SET operations with a specified ratio and value size.      | `getSetRatio`, `valueSize`, `iterationCount`          |
+| get_set_async        | `GetSetAsyncWorkload`        | Performs asynchronous GET and SET operations with a specified ratio and value size.  | `getSetRatio`, `valueSize`, `iterationCount`          |
+| redis_commands       | `RedisCommandsWorkload`      | Executes a specified number of get/set/del/incr/lpush/lrange commands.               | `valueSize`, `elementsCount`, `iterationCount`        |
+| redis_commands_async | `RedisCommandsAsyncWorkload` | Executes a specified number of get/set/del/incr/lpush/lrange commands.               | `valueSize`, `elementsCount`, `iterationCount`        |
+| multi                | `MultiWorkload`              | Executes get/set in MULTI/EXEC transactions with a specified size and command count. | `transactionSize`, `iterationCount`, `valueSize`, `getSetRatio` |
+| pub_sub              | `PubSubWorkload`             | Publishes and subscribes to messages on a specified channel.                         |          |
 ### RedisClusterClient
 
-| Alias          | Class                      | Description                                                                 | Supported Options                  |
-|----------------|----------------------------|-----------------------------------------------------------------------------|-----------------------------------|
-| get_set        | `GetSetClusterWorkload`    | Performs a mix of GET and SET operations on a Redis cluster with a specified ratio and value size. | `getSetRatio`, `valueSize`, `iterationCount` |
+| Alias          | Class                               | Description                                                                 | Supported Options                  |
+|----------------|-------------------------------------|-----------------------------------------------------------------------------|-----------------------------------|
+| get_set        | `GetSetClusterWorkload`             | Performs a mix of GET and SET operations on a Redis cluster with a specified ratio and value size. | `getSetRatio`, `valueSize`, `iterationCount` |
+| get_set_async  | `GetSetAsyncClusterWorkload`        | Performs asynchronous GET and SET operations with a specified ratio and value size.  | `getSetRatio`, `valueSize`, `iterationCount`          |
+| redis_commands_async | `RedisCommandsAsyncClusterWorkload` | Executes a specified number of get/set/del/incr/lpush/lrange commands.               | `valueSize`, `elementsCount`, `iterationCount`        |
+| redis_commands | `RedisCommandsClusterWorkload`      | Executes a specified number of get/set/del/incr/lpush/lrange commands.               | `valueSize`, `elementsCount`, `iterationCount`        |
+| pub_sub        | `PubSubClusterWorkload`             | Publishes and subscribes to messages on a specified channel.                         |          |   
 
 ## Metrics
  
