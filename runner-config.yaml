@@ -55,3 +55,9 @@ runner:
     #    interval: PT75S #75s
     #    idle: PT2H # 2h
     #    count: 9
+  clusterClientOptions:
+    topologyRefreshOptions:
+      adaptive:
+        enabled: true
+        refreshTriggers: ALL
+        triggersTimeout: PT30S

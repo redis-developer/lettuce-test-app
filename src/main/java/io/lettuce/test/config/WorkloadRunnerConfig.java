@@ -7,6 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Configuration
 @ConfigurationProperties(prefix = "runner")
@@ -19,6 +20,8 @@ public class WorkloadRunnerConfig {
     private TestConfig test;
 
     private ClientOptionsConfig clientOptions;
+
+    private ClusterClientOptionsConfig clusterClientOptions;
 
     WorkloadRunnerConfig() {
 
@@ -48,9 +51,18 @@ public class WorkloadRunnerConfig {
         this.clientOptions = clientOptions;
     }
 
+    public ClusterClientOptionsConfig getClusterClientOptions() {
+        return clusterClientOptions;
+    }
+
+    public void setClusterClientOptions(ClusterClientOptionsConfig clusterClientOptions) {
+        this.clusterClientOptions = clusterClientOptions;
+    }
+
     @Override
     public String toString() {
-        return "WorkloadRunnerConfig{" + "redis=" + redis + ", test=" + test + ", clientOptions=" + clientOptions + '}';
+        return "WorkloadRunnerConfig{" + "redis=" + redis + ", test=" + test + ", clientOptions=" + clientOptions
+                + ", clusterClientOptions=" + clusterClientOptions + '}';
     }
 
     public static class RedisConfig {
@@ -253,6 +265,86 @@ public class WorkloadRunnerConfig {
         @Override
         public String toString() {
             return "WorkloadConfig{" + "type='" + type + '\'' + ", maxDuration=" + maxDuration + ", options=" + options + '}';
+        }
+
+    }
+
+    public static class ClusterClientOptionsConfig {
+
+        private ClusterTopologyRefreshOptionsConfig topologyRefreshOptions;
+
+        // Getters and Setters
+        public ClusterTopologyRefreshOptionsConfig getTopologyRefreshOptions() {
+            return topologyRefreshOptions;
+        }
+
+        public void setTopologyRefreshOptions(ClusterTopologyRefreshOptionsConfig topologyRefreshOptions) {
+            this.topologyRefreshOptions = topologyRefreshOptions;
+        }
+
+        @Override
+        public String toString() {
+            return "ClusterClientOptionsConfig{" + "topologyRefreshOptions=" + topologyRefreshOptions + '}';
+        }
+
+        public static class ClusterTopologyRefreshOptionsConfig {
+
+            private AdaptiveRefreshConfig adaptive;
+
+            public AdaptiveRefreshConfig getAdaptive() {
+                return adaptive;
+            }
+
+            public void setAdaptive(AdaptiveRefreshConfig adaptive) {
+                this.adaptive = adaptive;
+            }
+
+            @Override
+            public String toString() {
+                return "ClusterTopologyRefreshOptionsConfig{" + "adaptive=" + adaptive + '}';
+            }
+
+            public static class AdaptiveRefreshConfig {
+
+                private boolean enabled;
+
+                private Set<String> refreshTriggers;
+
+                private Duration triggersTimeout;
+
+                // Getters and Setters
+                public boolean isEnabled() {
+                    return enabled;
+                }
+
+                public void setEnabled(boolean enabled) {
+                    this.enabled = enabled;
+                }
+
+                public Set<String> getRefreshTriggers() {
+                    return refreshTriggers;
+                }
+
+                public void setRefreshTriggers(Set<String> refreshTriggers) {
+                    this.refreshTriggers = refreshTriggers;
+                }
+
+                public Duration getTriggersTimeout() {
+                    return triggersTimeout;
+                }
+
+                public void setTriggersTimeout(Duration triggersTimeout) {
+                    this.triggersTimeout = triggersTimeout;
+                }
+
+                @Override
+                public String toString() {
+                    return "AdaptiveRefreshConfig{" + "enabled=" + enabled + ", refreshTriggers='" + refreshTriggers + '\''
+                            + ", triggersTimeout=" + triggersTimeout + '}';
+                }
+
+            }
+
         }
 
     }
