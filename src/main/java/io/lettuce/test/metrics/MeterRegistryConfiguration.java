@@ -19,11 +19,8 @@ public class MeterRegistryConfiguration {
 
     @Bean
     public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
-        return (registry) -> {
-            registry.config().commonTags("runId", runId);
-        };
+        return (registry) -> registry.config().commonTags("runId", runId);
     }
-
 
     @Bean
     @ConditionalOnProperty(prefix = "logging.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -50,21 +47,19 @@ public class MeterRegistryConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "simple.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public SimpleMeterRegistry simpleMeterRegistry(Environment env) {
+    public SimpleMeterRegistry simpleMeterRegistry() {
 
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         meterFilters(registry);
         return registry;
     }
 
-    //* Deny all meters by default and accept only specific meters for metrics stored in logs
+    // * Deny all meters by default and accept only specific meters for metrics stored in logs
     private void meterFilters(MeterRegistry registry) {
-        registry.config()
-                .meterFilter(MeterFilter.acceptNameStartsWith("redis.command"))
+        registry.config().meterFilter(MeterFilter.acceptNameStartsWith("redis.command"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.connect"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.reconnect"))
-                .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.reconnection"))
-                .meterFilter(MeterFilter.deny());
+                .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.reconnection")).meterFilter(MeterFilter.deny());
     }
 
 }
