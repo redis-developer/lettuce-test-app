@@ -20,7 +20,6 @@ import io.lettuce.test.workloads.cluster.GetSetClusterWorkload;
 import io.lettuce.test.workloads.cluster.PubSubClusterWorkload;
 import io.lettuce.test.workloads.cluster.RedisCommandsClusterAsyncWorkload;
 import io.lettuce.test.workloads.cluster.RedisCommandsClusterWorkload;
-import io.lettuce.test.workloads.cluster.SetInSlotClusterWorkload;
 
 public class ClusterWorkloadRunner
         extends WorkloadRunnerBase<RedisClusterClient, StatefulRedisClusterConnection<String, String>> {
@@ -63,7 +62,6 @@ public class ClusterWorkloadRunner
             case "pub_sub" -> new PubSubClusterWorkload(client, options);
             case "redis_commands" -> new RedisCommandsClusterWorkload(connection, options);
             case "redis_commands_async" -> new RedisCommandsClusterAsyncWorkload(connection, options);
-            case "set_in_slot" -> new SetInSlotClusterWorkload(connection, options);
             default -> throw new IllegalArgumentException("Unsupported workload." + config.getType());
         };
     }
