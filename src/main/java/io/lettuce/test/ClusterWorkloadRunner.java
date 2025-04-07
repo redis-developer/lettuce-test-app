@@ -71,6 +71,10 @@ public class ClusterWorkloadRunner
             if (config.getTopologyRefreshOptions() != null) {
                 applyTopologyRefreshOptions(builder, config.getTopologyRefreshOptions());
             }
+
+            if (config.isValidateClusterNodeMembership() != null) {
+                builder.validateClusterNodeMembership(config.isValidateClusterNodeMembership());
+            }
         }
     }
 

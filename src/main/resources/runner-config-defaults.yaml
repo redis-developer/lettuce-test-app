@@ -57,4 +57,4 @@ runner:
 #        enabled: true
 #        refreshTriggers: ALL
 #        triggersTimeout: PT30S
-#
+#    validateClusterNodeMembership: true

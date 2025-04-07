@@ -273,6 +273,8 @@ public class WorkloadRunnerConfig {
 
         private ClusterTopologyRefreshOptionsConfig topologyRefreshOptions;
 
+        private Boolean validateClusterNodeMembership;
+
         // Getters and Setters
         public ClusterTopologyRefreshOptionsConfig getTopologyRefreshOptions() {
             return topologyRefreshOptions;
@@ -280,6 +282,14 @@ public class WorkloadRunnerConfig {
 
         public void setTopologyRefreshOptions(ClusterTopologyRefreshOptionsConfig topologyRefreshOptions) {
             this.topologyRefreshOptions = topologyRefreshOptions;
+        }
+
+        public Boolean isValidateClusterNodeMembership() {
+            return validateClusterNodeMembership;
+        }
+
+        public void setValidateClusterNodeMembership(Boolean validateClusterNodeMembership) {
+            this.validateClusterNodeMembership = validateClusterNodeMembership;
         }
 
         @Override
