@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,8 +16,6 @@ public class ContinousWorkload {
     protected final WorkloadConfig config;
 
     private final BaseWorkload workload;
-
-    private final List<Exception> exceptions = new ArrayList<>();
 
     private final AtomicBoolean running = new AtomicBoolean(true);
 
@@ -40,8 +36,6 @@ public class ContinousWorkload {
                 doRun();
             } catch (Exception e) {
                 log.error("{} completed with errors", logPrefix(), e);
-                // TODO : micrometer counter
-                exceptions.add(e);
             }
         }
 
@@ -81,10 +75,6 @@ public class ContinousWorkload {
     public void stop() {
         log.info("Stopping workload {}", config);
         running.getAndSet(false);
-    }
-
-    public List<Exception> capturedExceptions() {
-        return exceptions;
     }
 
     protected void delay(Duration delay) {
