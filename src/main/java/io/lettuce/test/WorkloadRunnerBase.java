@@ -6,6 +6,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.core.cluster.event.ClusterTopologyChangedEvent;
 import io.lettuce.core.event.Event;
 import io.lettuce.core.event.EventBus;
 import io.lettuce.core.event.connection.ReconnectAttemptEvent;
@@ -229,18 +230,19 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     private void subscribeToReconnectEvents(EventBus eventBus) {
         Flux<Event> events = eventBus.get();
 
-        events.filter(event -> event instanceof ReconnectAttemptEvent).subscribe(event -> {
-            ReconnectAttemptEvent reconnectEvent = (ReconnectAttemptEvent) event;
-            ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
-
-            metricsReporter.incrementReconnectAttempt(connectionKey);
-        });
-
-        events.filter(event -> event instanceof ReconnectFailedEvent).subscribe(event -> {
-            ReconnectFailedEvent reconnectEvent = (ReconnectFailedEvent) event;
-            ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
-
-            metricsReporter.incrementReconnectFailure(connectionKey);
+        events.subscribe(event -> {
+            if (event instanceof ReconnectAttemptEvent) {
+                ReconnectAttemptEvent reconnectEvent = (ReconnectAttemptEvent) event;
+                ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
+                metricsReporter.incrementReconnectAttempt(connectionKey);
+            } else if (event instanceof ReconnectFailedEvent) {
+                ReconnectFailedEvent reconnectEvent = (ReconnectFailedEvent) event;
+                ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
+                metricsReporter.incrementReconnectFailure(connectionKey);
+            } else if (event instanceof ClusterTopologyChangedEvent) {
+                ClusterTopologyChangedEvent ctcEvent = (ClusterTopologyChangedEvent) event;
+                log.info("ClusterTopologyChangedEvent: before={}, after={}", ctcEvent.before(), ctcEvent.after());
+            }
         });
     }
 

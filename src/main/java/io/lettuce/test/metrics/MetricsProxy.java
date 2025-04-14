@@ -50,6 +50,7 @@ public class MetricsProxy<T> implements InvocationHandler {
             return result;
         } catch (InvocationTargetException ex) {
             metricsReporter.incrementCommandError(commandName);
+            log.error("Command failed", ex.getCause());
             throw ex.getCause();
         }
     }
