@@ -7,12 +7,9 @@ import io.lettuce.core.api.push.PushListener;
 import io.lettuce.core.api.push.PushMessage;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.event.EventBus;
-import io.lettuce.core.proactive.ProactiveWatchdogCommandHandler;
-import io.lettuce.core.protocol.CommandExpiryWriter;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 import io.lettuce.core.resource.ClientResources;
-import io.lettuce.core.resource.NettyCustomizer;
 import io.lettuce.test.config.WorkloadRunnerConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.WorkloadConfig;
 import io.lettuce.test.metrics.MetricsReporter;
@@ -23,7 +20,6 @@ import io.lettuce.test.workloads.PubSubWorkload;
 import io.lettuce.test.workloads.RedisCommandsWorkload;
 import io.lettuce.test.workloads.async.GetSetAsyncWorkload;
 import io.lettuce.test.workloads.async.RedisCommandsAsyncWorkload;
-import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +57,6 @@ public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClie
         ClientResources.Builder resourceBuilder = ClientResources.builder();
         applyConfig(resourceBuilder, config.getClientOptions());
 
-        applyProactiveReconnect(resourceBuilder);
-
         ClientResources resources = resourceBuilder.build();
 
         RedisClient client = RedisClient.create(resources, redisUri);
@@ -75,24 +69,7 @@ public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClie
         ClientOptions clientOptions = createClientOptions(config.getClientOptions());
         client.setOptions(clientOptions);
 
-        // Hack: Set the global flag to enable proactive reconnect
-        if (config.getClientOptions().getEnableProactive() != null) {
-            CommandExpiryWriter.enableProactive = config.getClientOptions().getEnableProactive();
-        }
-
         return client;
-    }
-
-    private void applyProactiveReconnect(ClientResources.Builder resourceBuilder) {
-
-        resourceBuilder.nettyCustomizer(new NettyCustomizer() {
-            @Override
-            public void afterChannelInitialized(Channel channel) {
-                ProactiveWatchdogCommandHandler<String, String> proactiveHandler =  new ProactiveWatchdogCommandHandler<>();
-
-                channel.pipeline().addFirst(proactiveHandler);
-            }
-        });
     }
 
     @Override

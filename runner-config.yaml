@@ -44,6 +44,7 @@ runner:
     #disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
     #timeoutOptions: # Options to configure command timeouts
     #    fixedTimeout: PT1S # 1 s
+    #    proactiveTimeoutsRelaxing: PT0.500S # 500 ms
     #socketOptions:  # Options to configure low-level socket options for the connections kept to Redis servers.
     #  connectTimeout: PT10S # 10 s
     #  tcpUserTimeoutOptions:

@@ -259,8 +259,6 @@ public class WorkloadRunnerConfig {
 
     public static class ClientOptionsConfig {
 
-        private Boolean enableProactive;
-
         private Boolean autoReconnect;
 
         private Boolean pingBeforeActivate;
@@ -276,14 +274,6 @@ public class WorkloadRunnerConfig {
         private ReconnectOptionsConfig reconnectOptions;
 
         // Getters and Setters
-        public Boolean getEnableProactive() {
-            return enableProactive;
-        }
-
-        public void setEnableProactive(Boolean enableProactive) {
-            this.enableProactive = enableProactive;
-        }
-
         public Boolean getAutoReconnect() {
             return autoReconnect;
         }
@@ -374,6 +364,8 @@ public class WorkloadRunnerConfig {
 
         private Duration fixedTimeout;
 
+        private Duration proactiveTimeoutsRelaxing;
+
         // Getters and Setters
         public Duration getFixedTimeout() {
             return fixedTimeout;
@@ -383,9 +375,19 @@ public class WorkloadRunnerConfig {
             this.fixedTimeout = fixedTimeout;
         }
 
+        public Duration getProactiveTimeoutsRelaxing() {
+            return proactiveTimeoutsRelaxing;
+        }
+
+        public void setProactiveTimeoutsRelaxing(Duration proactiveTimeoutsRelaxing) {
+            this.proactiveTimeoutsRelaxing = proactiveTimeoutsRelaxing;
+        }
+
+
         @Override
         public String toString() {
-            return "TimeoutOptionsConfig{" + "fixedTimeout=" + fixedTimeout + '}';
+            return "TimeoutOptionsConfig{" + "fixedTimeout=" + fixedTimeout + ",proactiveExpiryRelaxTime=" + proactiveTimeoutsRelaxing
+                    + '}';
         }
 
     }
