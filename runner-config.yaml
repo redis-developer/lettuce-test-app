@@ -11,7 +11,7 @@ runner:
     #timeout: 1000s
 
   test:
-    mode: proactive_upgrade  # standalone, cluster or proactive_upgrade
+    mode: standalone  # standalone, cluster or proactive_upgrade
     clients: 1 # Number of client instances
     connectionsPerClient: 1  # Number of connections per client
     threadsPerConnection: 1  # Number of threads sharing same connection
