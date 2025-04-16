@@ -519,11 +519,10 @@ public class WorkloadRunnerConfig {
             this.proactiveTimeoutsRelaxing = proactiveTimeoutsRelaxing;
         }
 
-
         @Override
         public String toString() {
-            return "TimeoutOptionsConfig{" + "fixedTimeout=" + fixedTimeout + ",proactiveExpiryRelaxTime=" + proactiveTimeoutsRelaxing
-                    + '}';
+            return "TimeoutOptionsConfig{" + "fixedTimeout=" + fixedTimeout + ",proactiveExpiryRelaxTime="
+                    + proactiveTimeoutsRelaxing + '}';
         }
 
     }

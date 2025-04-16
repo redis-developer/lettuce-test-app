@@ -96,13 +96,14 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
 
     private CompletableFuture<Void> executeWorkloads(List<C> clients, List<List<Conn>> connections) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
+        WorkloadConfig workloadConfig = config.getTest().getWorkload();
         for (int i = 0; i < clients.size(); i++) {
             for (Conn conn : connections.get(i)) {
                 for (int j = 0; j < config.getTest().getThreadsPerConnection(); j++) {
                     C client = clients.get(i);
-                    BaseWorkload workload = createWorkload(client, conn, config.getTest().getWorkload());
+                    BaseWorkload workload = createWorkload(client, conn, workloadConfig);
                     workload.metricsReporter(metricsReporter);
-                    BaseWorkload withErrorHandler = withErrorHandler(workload, client, conn);
+                    BaseWorkload withErrorHandler = withErrorHandler(workload, client, conn, workloadConfig);
 
                     futures.add(submit(withErrorHandler, config.getTest().getWorkload()));
                 }
@@ -124,7 +125,7 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
     }
 
     private Conn tryCreateConnection(C client, WorkloadRunnerConfig config) {
-        Timer.Sample sample = metricsReporter.startConnectionTimer();
+        Timer.Sample sample = metricsReporter.startTimer();
         try {
             Conn connection = createConnection(client, config);
             metricsReporter.recordSuccessfulConnection(sample);
@@ -153,9 +154,9 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
 
     protected abstract Conn createConnection(C client, WorkloadRunnerConfig config);
 
-    protected CompletableFuture<ContinousWorkload> submit(BaseWorkload task, WorkloadConfig config) {
-        ContinousWorkload workload = new ContinousWorkload(task, config);
-        CompletableFuture<ContinousWorkload> future = CompletableFuture.runAsync(workload::run, executor)
+    protected CompletableFuture<ContinuousWorkload> submit(BaseWorkload task, WorkloadConfig config) {
+        ContinuousWorkload workload = new ContinuousWorkload(task, config);
+        CompletableFuture<ContinuousWorkload> future = CompletableFuture.runAsync(workload::run, executor)
                 .whenComplete((result, throwable) -> {
                     submittedWorkloads.remove(workload);
                     if (throwable != null) {
@@ -166,17 +167,21 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         return future;
     }
 
-    private BaseWorkload withErrorHandler(BaseWorkload task, C client, Conn conn) {
+    private BaseWorkload withErrorHandler(BaseWorkload task, C client, Conn conn, WorkloadConfig config) {
         return new BaseWorkload(task.options()) {
 
             @Override
             public void run() {
+                Timer.Sample timer = metricsReporter.startTimer();
                 try {
                     task.run();
+                    metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(), BaseWorkload.Status.SUCCESSFUL);
                 } catch (Exception e) {
                     // Note: Use client and conn reference to track, which client and connection caused the error
                     // could not find other means to identify the client and connection
                     log.error("Error client: {} conn: {}", client, conn, e);
+                    metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(),
+                            BaseWorkload.Status.COMPLETED_WITH_ERRORS);
                     throw e;
                 }
             }
@@ -320,10 +325,10 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             builder.fixedTimeout(config.getFixedTimeout());
         }
 
-        if(config.getProactiveTimeoutsRelaxing() != null) {
+        if (config.getProactiveTimeoutsRelaxing() != null) {
             try {
-                Method proactiveTimeoutsRelaxingMethod = builder.getClass()
-                        .getMethod("proactiveTimeoutsRelaxing", Duration.class);
+                Method proactiveTimeoutsRelaxingMethod = builder.getClass().getMethod("proactiveTimeoutsRelaxing",
+                        Duration.class);
                 proactiveTimeoutsRelaxingMethod.invoke(builder, config.getProactiveTimeoutsRelaxing());
                 log.info("ProactiveTimeoutsRelaxingMethod enabled successfully.");
             } catch (NoSuchMethodException e) {

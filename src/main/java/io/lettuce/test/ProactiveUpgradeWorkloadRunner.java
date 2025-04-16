@@ -19,6 +19,7 @@ import io.lettuce.test.workloads.MultiWorkload;
 import io.lettuce.test.workloads.PubSubWorkload;
 import io.lettuce.test.workloads.RedisCommandsWorkload;
 import io.lettuce.test.workloads.async.GetSetAsyncWorkload;
+import io.lettuce.test.workloads.async.IncrementAsyncWorkload;
 import io.lettuce.test.workloads.async.RedisCommandsAsyncWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,8 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClient, StatefulRedisPubSubConnection<String, String>> {
+public class ProactiveUpgradeWorkloadRunner
+        extends WorkloadRunnerBase<RedisClient, StatefulRedisPubSubConnection<String, String>> {
 
     private static final Logger logger = LoggerFactory.getLogger(ProactiveUpgradeWorkloadRunner.class);
 
@@ -48,6 +50,7 @@ public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClie
             // async
             case "get_set_async" -> new GetSetAsyncWorkload(connection, options);
             case "redis_commands_async" -> new RedisCommandsAsyncWorkload(connection, options);
+            case "increment_async" -> new IncrementAsyncWorkload(connection, options);
             default -> throw new IllegalArgumentException("Invalid workload specified for standalone mode." + config.getType());
         };
     }
@@ -89,9 +92,7 @@ public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClie
 
         @Override
         public void onPushMessage(PushMessage message) {
-            List<String> content = message.getContent()
-                    .stream()
-                    .map( ez -> StringCodec.UTF8.decodeKey( (ByteBuffer) ez))
+            List<String> content = message.getContent().stream().map(ez -> StringCodec.UTF8.decodeKey((ByteBuffer) ez))
                     .collect(Collectors.toList());
 
             if (content.stream().anyMatch(c -> c.equals("type=stop_demo"))) {
@@ -99,5 +100,7 @@ public class ProactiveUpgradeWorkloadRunner extends WorkloadRunnerBase<RedisClie
                 shouldContinue = false;
             }
         }
+
     }
+
 }

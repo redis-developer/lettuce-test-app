@@ -25,6 +25,10 @@ import static io.lettuce.test.DefaultWorkloadOptions.WorkloadOptionsConstants.DE
  */
 public abstract class BaseWorkload {
 
+    public enum Status {
+        SUCCESSFUL, COMPLETED_WITH_ERRORS
+    }
+
     private static final Logger log = LoggerFactory.getLogger(BaseWorkload.class);
 
     private MetricsReporter metricsReporter;

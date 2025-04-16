@@ -14,6 +14,7 @@ import io.lettuce.test.workloads.MultiWorkload;
 import io.lettuce.test.workloads.PubSubWorkload;
 import io.lettuce.test.workloads.RedisCommandsWorkload;
 import io.lettuce.test.workloads.async.GetSetAsyncWorkload;
+import io.lettuce.test.workloads.async.IncrementAsyncWorkload;
 import io.lettuce.test.workloads.async.RedisCommandsAsyncWorkload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class StandaloneWorkloadRunner extends WorkloadRunnerBase<RedisClient, St
             // async
             case "get_set_async" -> new GetSetAsyncWorkload(connection, options);
             case "redis_commands_async" -> new RedisCommandsAsyncWorkload(connection, options);
+            case "increment_async" -> new IncrementAsyncWorkload(connection, options);
             default -> throw new IllegalArgumentException("Invalid workload specified for standalone mode." + config.getType());
         };
     }

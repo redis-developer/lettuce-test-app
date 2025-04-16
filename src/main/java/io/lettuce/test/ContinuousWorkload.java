@@ -9,9 +9,9 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ContinousWorkload {
+public class ContinuousWorkload {
 
-    protected static final Logger log = LoggerFactory.getLogger(ContinousWorkload.class);
+    protected static final Logger log = LoggerFactory.getLogger(ContinuousWorkload.class);
 
     protected final WorkloadConfig config;
 
@@ -21,7 +21,7 @@ public class ContinousWorkload {
 
     private final AtomicInteger iterationCount = new AtomicInteger(0);
 
-    public ContinousWorkload(BaseWorkload workload, WorkloadConfig config) {
+    public ContinuousWorkload(BaseWorkload workload, WorkloadConfig config) {
         this.config = config;
         this.workload = workload;
     }

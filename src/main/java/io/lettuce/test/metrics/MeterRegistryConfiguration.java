@@ -57,6 +57,7 @@ public class MeterRegistryConfiguration {
     // * Deny all meters by default and accept only specific meters for metrics stored in logs
     private void meterFilters(MeterRegistry registry) {
         registry.config().meterFilter(MeterFilter.acceptNameStartsWith("redis.command"))
+                .meterFilter(MeterFilter.acceptNameStartsWith("redis.workload"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.connect"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.reconnect"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.reconnection")).meterFilter(MeterFilter.deny());

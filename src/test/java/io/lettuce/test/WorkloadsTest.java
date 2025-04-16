@@ -10,12 +10,12 @@ class WorkloadsTest {
 
     private Workloads workloads;
 
-    private ContinousWorkload mockWorkload;
+    private ContinuousWorkload mockWorkload;
 
     @BeforeEach
     void setUp() {
         workloads = new Workloads();
-        mockWorkload = mock(ContinousWorkload.class);
+        mockWorkload = mock(ContinuousWorkload.class);
     }
 
     @Test

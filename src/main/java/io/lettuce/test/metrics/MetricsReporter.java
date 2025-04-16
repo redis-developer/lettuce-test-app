@@ -1,5 +1,6 @@
 package io.lettuce.test.metrics;
 
+import io.lettuce.test.workloads.BaseWorkload;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -78,7 +79,7 @@ public class MetricsReporter {
         return meterRegistry;
     }
 
-    public Timer.Sample startConnectionTimer() {
+    public Timer.Sample startTimer() {
         return Timer.start(meterRegistry);
     }
 
@@ -96,6 +97,13 @@ public class MetricsReporter {
     void incrementCommandError(String commandName) {
         commandErrorCounters.computeIfAbsent(commandName, this::createCommandErrorCounter).increment();
         commandErrorTotalCounter.increment();
+    }
+
+    public void recordWorkloadExecutionDuration(Timer.Sample sample, String workloadName, BaseWorkload.Status status) {
+        Timer workloadDuration = Timer.builder("redis.workload.execution.duration")
+                .description("Time taken to complete a workload").tag("workload", workloadName).tag("status", status.toString())
+                .register(meterRegistry);
+        sample.stop(workloadDuration);
     }
 
     public void recordSuccessfulConnection(Timer.Sample sample) {

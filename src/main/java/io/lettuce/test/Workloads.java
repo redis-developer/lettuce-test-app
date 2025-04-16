@@ -6,22 +6,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class Workloads {
 
-    private final Set<ContinousWorkload> workloads = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<ContinuousWorkload> workloads = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    public void add(ContinousWorkload workload) {
+    public void add(ContinuousWorkload workload) {
         workloads.add(workload);
     }
 
-    public void remove(ContinousWorkload workload) {
+    public void remove(ContinuousWorkload workload) {
         workloads.remove(workload);
     }
 
-    public boolean contains(ContinousWorkload workload) {
+    public boolean contains(ContinuousWorkload workload) {
         return workloads.contains(workload);
     }
 
     public void stop() {
-        for (ContinousWorkload workload : workloads) {
+        for (ContinuousWorkload workload : workloads) {
             workload.stop();
         }
         workloads.clear();
