@@ -34,10 +34,6 @@ public class LettuceWorkloadRunner {
                 runner = new ClusterWorkloadRunner(config, metricsReporter);
                 log.info("Running cluster workload");
                 break;
-            case "PROACTIVE_UPGRADE":
-                runner = new ProactiveUpgradeWorkloadRunner(config, metricsReporter);
-                log.info("Running proactive_upgrade workload");
-                break;
             default:
                 throw new IllegalArgumentException("Invalid mode specified: " + config.getTest().getMode());
         }

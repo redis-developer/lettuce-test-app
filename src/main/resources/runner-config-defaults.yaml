@@ -19,8 +19,6 @@ runner:
       type: get_set_async # Available workload types:
                           # Standalone mode      : redis_commands, redis_commands_async, get_set, multi, pub_sub, get_set_async,
                           #                        increment_async
-                          # ProactiveUpgrade mode: redis_commands, redis_commands_async, get_set, multi, pub_sub, get_set_async,
-                          #                        increment_async
                           # Cluster mode         : redis_commands, redis_commands_async, get_set, get_set_async, pub_sub,
       maxDuration: PT60S  # Max duration in seconds per workload
       #options: # Options specific per workload. See below for example configuration of get_set_async workload
@@ -37,6 +35,7 @@ runner:
 
   #clientOptions:
     #autoReconnect: true
+    #proactiveRebind: false
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #  proactiveTimeoutsRelaxing: PT0.500S # 500 ms

@@ -11,15 +11,13 @@ runner:
     #timeout: 1000s
 
   test:
-    mode: standalone  # standalone, cluster or proactive_upgrade
+    mode: standalone  # standalone, cluster
     clients: 1 # Number of client instances
     connectionsPerClient: 1  # Number of connections per client
     threadsPerConnection: 1  # Number of threads sharing same connection
     workload:
       type: get_set_async # Available workload types:
                           # Standalone mode      : redis_commands, redis_commands_async, get_set, multi, pub_sub, get_set_async,
-                          #                        increment_async
-                          # ProactiveUpgrade mode: redis_commands, redis_commands_async, get_set, multi, pub_sub, get_set_async,
                           #                        increment_async
                           # Cluster mode         : redis_commands, redis_commands_async, get_set, get_set_async, pub_sub,
       maxDuration: PT1M   # Max duration in seconds per workload
@@ -39,8 +37,9 @@ runner:
   clientOptions:
     metricsOptions:
       commandLatencyMonitoring: true # Enables Lettuce internal command latency monitoring
-      connectionMonitoring: true     # Enables Additional metrics for connection inacive time. Note supported with GA build of lettuce, and required custom Lettuce client build.  See README.md for instruction ho to enable them
+      connectionMonitoring: true     # Enables Additional metrics for connection inactive time. Note supported with GA build of lettuce, and required custom Lettuce client build.  See README.md for instruction ho to enable them
     autoReconnect: true
+    proactiveRebind: false
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #pingBeforeActivate: false

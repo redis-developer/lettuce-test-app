@@ -363,6 +363,8 @@ public class WorkloadRunnerConfig {
 
         private Boolean autoReconnect;
 
+        private Boolean proactiveRebind;
+
         private Boolean pingBeforeActivate;
 
         private Integer requestQueueSize;
@@ -384,6 +386,14 @@ public class WorkloadRunnerConfig {
 
         public void setAutoReconnect(Boolean autoReconnect) {
             this.autoReconnect = autoReconnect;
+        }
+
+        public Boolean getProactiveRebind() {
+            return proactiveRebind;
+        }
+
+        public void setProactiveRebind(Boolean proactiveRebind) {
+            this.proactiveRebind = proactiveRebind;
         }
 
         public Boolean getPingBeforeActivate() {
@@ -436,10 +446,10 @@ public class WorkloadRunnerConfig {
 
         @Override
         public String toString() {
-            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", pingBeforeActivate=" + pingBeforeActivate
-                    + ", requestQueueSize=" + requestQueueSize + ", timeoutOptions=" + timeoutOptions + ", socketOptions="
-                    + socketOptions + ", disconnectedBehavior='" + disconnectedBehavior + '\'' + ", reconnectOptions="
-                    + reconnectOptions + '}';
+            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", proactiveRebind=" + proactiveRebind
+                    + ", pingBeforeActivate=" + pingBeforeActivate + ", requestQueueSize=" + requestQueueSize
+                    + ", timeoutOptions=" + timeoutOptions + ", socketOptions=" + socketOptions + ", disconnectedBehavior='"
+                    + disconnectedBehavior + '\'' + ", reconnectOptions=" + reconnectOptions + '}';
         }
 
         public MetricsOptionsConfig getMetricsOptions() {
