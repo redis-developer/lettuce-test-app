@@ -26,7 +26,9 @@ EP=`get_endpoint $DB_NAME`
 
 DB_ID=`echo $EP | cut -d' ' -f1 | cut -d':' -f2`
 EP_ID=`echo $EP | cut -d' ' -f3 | cut -d':' -f2,3`
-EP_CURR=`echo $EP | cut -d' ' -f4 | cut -d':' -f2`
+NODE_ID=`echo $EP | cut -d' ' -f4 | cut -d':' -f2`
+EP_CURR=$NODE_ID
+DMC_ID=$NODE_ID
 EP_TO=-1
 
 if [ "$EP_CURR" -eq 2 ]
@@ -45,11 +47,11 @@ rladmin bind endpoint $EP_ID include $EP_TO
 echo "`time_s` - Included the new endpoint $EP_TO_IP."
 sleep 5
 
-# redis-cli -3 -h $EP_CURR_IP -p $DB_PORT -a $DB_PWD PUBLISH __rebind "type=rebind;from_ep=$EP_CURR_IP:$DB_PORT;to_ep=$EP_TO_IP:$DB_PORT;until_s=10"
-msg_payload=$(printf '["MOVING",30,"%s:%s"]' "$EP_TO_IP" "$DB_PORT")
-ccs-cli HSET endpoint:$EP_ID push_notification $msg_payload
-ccs-cli HSET bdb:$DB_ID _changestate:dmc:$EP_CURR pending
-ccs-cli PUBLISH config-change:dmc:$EP_CURR @bdb:$DB_ID
+msg_payload=\'$(printf '{"version": "0.1", "meta": { "bdb": "%s"}, "message": ["MOVING",30,"%s:%s"]}' "$DB_ID" "$EP_TO_IP" "$DB_PORT")\'
+set -x
+ccs-cli HSET dmc:$DMC_ID push_notification "$msg_payload"
+ccs-cli HSET dmc:$DMC_ID _changestate:dmc:$DMC_ID pending
+ccs-cli PUBLISH config-change:dmc:$DMC_ID @dmc:$DMC_ID
 
 echo "Notified the client."
 sleep 10
