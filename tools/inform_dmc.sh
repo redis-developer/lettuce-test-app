@@ -3,7 +3,11 @@
 # During testing, use the mock rladmin if MOCK_RLADMIN is set
 rladmin() {
     if [ ! -z "$MOCK_RLADMIN" ]; then
-        "$(pwd)/tools/mock_rladmin" "$@"
+        if [ ! -z "$MOCK_RLADMIN_FILE" ]; then
+            "$(pwd)/tools/$MOCK_RLADMIN_FILE" "$@"
+        else
+            "$(pwd)/tools/mock_rladmin" "$@"
+        fi
     else
         command rladmin "$@"
     fi
@@ -33,11 +37,11 @@ get_all_node_ips() {
     local result
     
     if [ "$ip_type" = "internal" ]; then
-        # Get ADDRESS field (3rd column)
-        result=$(rladmin status | grep "^node:" | tr -s ' ' | cut -d' ' -f3 | sort | uniq)
+        # Get ADDRESS field (3rd column), including the master node (remove the * if present)
+        result=$(rladmin status | grep "^*\?node:" | tr -s ' ' | sed 's/^\*//' | cut -d' ' -f3 | sort | uniq)
     else
-        # Get EXTERNAL_ADDRESS field (4th column)
-        result=$(rladmin status | grep "^node:" | tr -s ' ' | cut -d' ' -f4 | sort | uniq)
+        # Get EXTERNAL_ADDRESS field (4th column), including the master node
+        result=$(rladmin status | grep "^*\?node:" | tr -s ' ' | sed 's/^\*//' | cut -d' ' -f4 | sort | uniq)
     fi
     
     log "Found $ip_type IPs"
@@ -70,18 +74,25 @@ wait_for_new_ips() {
     local attempt=0
     local initial_ips
     local current_ips
-    local new_ips
+    local initial_count
+    local current_count
     
     log "Starting to wait for new IPs to appear (IP type: $ip_type)"
     initial_ips=$(get_all_node_ips $ip_type)
+    initial_count=$(echo "$initial_ips" | wc -l | tr -d ' ')
+    log "Initial IPs ($initial_count):"
+    echo "$initial_ips" >&2
     
     while [ $attempt -lt $max_attempts ]; do
         current_ips=$(get_all_node_ips $ip_type)
-        new_ips=$(comm -13 <(echo "$initial_ips" | sort) <(echo "$current_ips" | sort))
+        current_count=$(echo "$current_ips" | wc -l | tr -d ' ')
+        log "Current IPs ($current_count):"
+        echo "$current_ips" >&2
         
-        if [ ! -z "$new_ips" ]; then
+        if [ $current_count -gt $initial_count ]; then
             log "Found new IPs"
-            echo "$new_ips"
+            # Get the new IPs by filtering out the initial ones
+            echo "$current_ips" | grep -vF "$initial_ips"
             return 0
         fi
         
