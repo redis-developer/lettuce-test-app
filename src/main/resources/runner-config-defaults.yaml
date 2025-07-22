@@ -35,7 +35,7 @@ runner:
 
   #clientOptions:
     #autoReconnect: true
-    #proactiveRebind: false
+    #supportMaintenanceEvents: false
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #  proactiveTimeoutsRelaxing: PT0.500S # 500 ms

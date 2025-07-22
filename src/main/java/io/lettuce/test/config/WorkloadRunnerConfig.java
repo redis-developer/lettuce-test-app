@@ -363,7 +363,7 @@ public class WorkloadRunnerConfig {
 
         private Boolean autoReconnect;
 
-        private Boolean proactiveRebind;
+        private Boolean supportMaintenanceEvents;
 
         private Boolean pingBeforeActivate;
 
@@ -388,12 +388,12 @@ public class WorkloadRunnerConfig {
             this.autoReconnect = autoReconnect;
         }
 
-        public Boolean getProactiveRebind() {
-            return proactiveRebind;
+        public Boolean getSupportMaintenanceEvents() {
+            return supportMaintenanceEvents;
         }
 
-        public void setProactiveRebind(Boolean proactiveRebind) {
-            this.proactiveRebind = proactiveRebind;
+        public void setSupportMaintenanceEvents(Boolean supportMaintenanceEvents) {
+            this.supportMaintenanceEvents = supportMaintenanceEvents;
         }
 
         public Boolean getPingBeforeActivate() {
@@ -446,7 +446,7 @@ public class WorkloadRunnerConfig {
 
         @Override
         public String toString() {
-            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", proactiveRebind=" + proactiveRebind
+            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", proactiveRebind=" + supportMaintenanceEvents
                     + ", pingBeforeActivate=" + pingBeforeActivate + ", requestQueueSize=" + requestQueueSize
                     + ", timeoutOptions=" + timeoutOptions + ", socketOptions=" + socketOptions + ", disconnectedBehavior='"
                     + disconnectedBehavior + '\'' + ", reconnectOptions=" + reconnectOptions + '}';
@@ -510,7 +510,7 @@ public class WorkloadRunnerConfig {
 
         private Duration fixedTimeout;
 
-        private Duration proactiveTimeoutsRelaxing;
+        private Duration timeoutsRelaxingDuringMaintenance;
 
         // Getters and Setters
         public Duration getFixedTimeout() {
@@ -521,18 +521,18 @@ public class WorkloadRunnerConfig {
             this.fixedTimeout = fixedTimeout;
         }
 
-        public Duration getProactiveTimeoutsRelaxing() {
-            return proactiveTimeoutsRelaxing;
+        public Duration getTimeoutsRelaxingDuringMaintenance() {
+            return timeoutsRelaxingDuringMaintenance;
         }
 
-        public void setProactiveTimeoutsRelaxing(Duration proactiveTimeoutsRelaxing) {
-            this.proactiveTimeoutsRelaxing = proactiveTimeoutsRelaxing;
+        public void setTimeoutsRelaxingDuringMaintenance(Duration timeoutsRelaxingDuringMaintenance) {
+            this.timeoutsRelaxingDuringMaintenance = timeoutsRelaxingDuringMaintenance;
         }
 
         @Override
         public String toString() {
             return "TimeoutOptionsConfig{" + "fixedTimeout=" + fixedTimeout + ",proactiveExpiryRelaxTime="
-                    + proactiveTimeoutsRelaxing + '}';
+                    + timeoutsRelaxingDuringMaintenance + '}';
         }
 
     }

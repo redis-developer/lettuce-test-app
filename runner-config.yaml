@@ -39,7 +39,7 @@ runner:
       commandLatencyMonitoring: true # Enables Lettuce internal command latency monitoring
       connectionMonitoring: true     # Enables Additional metrics for connection inactive time. Note supported with GA build of lettuce, and required custom Lettuce client build.  See README.md for instruction ho to enable them
     autoReconnect: true
-    proactiveRebind: false
+    supportMaintenanceEvents: false
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #pingBeforeActivate: false
@@ -48,7 +48,7 @@ runner:
     #disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
     #timeoutOptions: # Options to configure command timeouts
     #    fixedTimeout: PT1S # 1 s
-    #    proactiveTimeoutsRelaxing: PT0.500S # 500 ms
+    #    timeoutsRelaxingDuringMaintenance: PT0.500S # 500 ms
     #socketOptions:  # Options to configure low-level socket options for the connections kept to Redis servers.
     #  connectTimeout: PT10S # 10 s
     #  tcpUserTimeoutOptions:

@@ -297,8 +297,8 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
                 builder.autoReconnect(config.getAutoReconnect());
             }
 
-            if (config.getProactiveRebind() != null) {
-                OptionalClientOptions.applyProactiveRebindOption(builder, config.getProactiveRebind());
+            if (config.getSupportMaintenanceEvents() != null) {
+                OptionalClientOptions.applySupportMaintenanceEventsOption(builder, config.getSupportMaintenanceEvents());
             }
 
             if (config.getPingBeforeActivate() != null) {
@@ -330,16 +330,16 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             builder.fixedTimeout(config.getFixedTimeout());
         }
 
-        if (config.getProactiveTimeoutsRelaxing() != null) {
+        if (config.getTimeoutsRelaxingDuringMaintenance() != null) {
             try {
-                Method proactiveTimeoutsRelaxingMethod = builder.getClass().getMethod("proactiveTimeoutsRelaxing",
+                Method timeoutsRelaxingDuringMaintenance = builder.getClass().getMethod("timeoutsRelaxingDuringMaintenance",
                         Duration.class);
-                proactiveTimeoutsRelaxingMethod.invoke(builder, config.getProactiveTimeoutsRelaxing());
+                timeoutsRelaxingDuringMaintenance.invoke(builder, config.getTimeoutsRelaxingDuringMaintenance());
                 log.info("ProactiveTimeoutsRelaxingMethod enabled successfully.");
             } catch (NoSuchMethodException e) {
-                throw new IllegalStateException("The method 'proactiveTimeoutsRelaxing' is not available in this build.", e);
+                throw new IllegalStateException("The method 'timeoutsRelaxingDuringMaintenance' is not available in this build.", e);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException("Failed to invoke 'proactiveTimeoutsRelaxing' method.", e);
+                throw new RuntimeException("Failed to invoke 'timeoutsRelaxingDuringMaintenance' method.", e);
             }
         }
     }
@@ -387,15 +387,13 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
 
     static class OptionalClientOptions {
 
-        private static final Logger log = LoggerFactory.getLogger(OptionalClientOptions.class);
-
-        static public void applyProactiveRebindOption(ClientOptions.Builder builder, boolean value) {
+        static public void applySupportMaintenanceEventsOption(ClientOptions.Builder builder, boolean value) {
             try {
-                Method method = builder.getClass().getMethod("proactiveRebind", boolean.class);
+                Method method = builder.getClass().getMethod("supportMaintenanceEvents", boolean.class);
                 method.invoke(builder, value);
             } catch (NoSuchMethodException e) {
                 throw new IllegalStateException(
-                        "proactiveRebind configuration option can't be applied. Not available in this build.", e);
+                        "supportMaintenanceEvents configuration option can't be applied. Not available in this build.", e);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException("Failed to configure proactiveRebind option.", e);
             }
