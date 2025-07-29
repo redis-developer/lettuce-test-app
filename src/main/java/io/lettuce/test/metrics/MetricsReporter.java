@@ -37,11 +37,13 @@ public class MetricsReporter {
     @Value("${simple.metrics.dumpRate:PT5S}")
     private Duration dumpRate;
 
-    private final Map<String, Timer> commandLatencyTimers = new ConcurrentHashMap<>();
+    private final Map<CommandKey, Timer> commandLatencyTimers = new ConcurrentHashMap<>();
 
     private final Timer commandLatencyTotalTimer;
 
     private final Map<String, Counter> commandErrorCounters = new ConcurrentHashMap<>();
+
+    private final Map<CommandKey, Counter> commandTotalCounter = new ConcurrentHashMap<>();
 
     private final Counter commandErrorTotalCounter;
 
@@ -50,6 +52,12 @@ public class MetricsReporter {
     private final Timer connectionFailureTimer;
 
     private final Map<ConnectionKey, Counter> reconnectAttemptCounter = new ConcurrentHashMap<>();
+
+    private final Map<ReconnectAttemptKey, Counter> redisConnectionsTotal = new ConcurrentHashMap<>();
+
+    private final Map<ConnectionKey, Counter> redisConnectionsDrops = new ConcurrentHashMap<>();
+
+    private final Map<PubSubOpKey, Counter> pubSubOperationCounter = new ConcurrentHashMap<>();
 
     private final Counter reconnectAttemptTotalCounter;
 
@@ -87,11 +95,18 @@ public class MetricsReporter {
         return Timer.start(meterRegistry);
     }
 
-    void recordCommandLatency(String commandName, Timer.Sample sample) {
-        Timer timer = commandLatencyTimers.computeIfAbsent(commandName, this::createCommandLatencyTimer);
+    public record CommandKey(String commandName, OperationStatus status) {
+
+    }
+
+    void recordCommandLatency(CommandKey commandKey, Timer.Sample sample) {
+        Timer timer = commandLatencyTimers.computeIfAbsent(commandKey, this::createCommandLatencyTimer);
         long timeNs = sample.stop(timer);
 
         commandLatencyTotalTimer.record(Duration.ofNanos(timeNs));
+
+        Counter counter = commandTotalCounter.computeIfAbsent(commandKey, this::createCommandTotalCounter);
+        counter.increment();
     }
 
     void incrementCommandError(String commandName) {
@@ -101,8 +116,8 @@ public class MetricsReporter {
 
     public void recordWorkloadExecutionDuration(Timer.Sample sample, String workloadName, BaseWorkload.Status status) {
         Timer workloadDuration = Timer.builder("redis.workload.execution.duration")
-                .description("Time taken to complete a workload").tag("workload", workloadName).tag("status", status.toString())
-                .register(meterRegistry);
+                .description("Time taken to complete a workload").tag("workload", workloadName)
+                .tag("status", status.name().toLowerCase()).register(meterRegistry);
         sample.stop(workloadDuration);
     }
 
@@ -119,21 +134,50 @@ public class MetricsReporter {
         reconnectAttemptTotalCounter.increment();
     }
 
+    public void incrementRedisConnectionAttempt(ReconnectAttemptKey reconnectAttempt) {
+        redisConnectionsTotal.computeIfAbsent(reconnectAttempt, this::createRedisConnectionsTotal).increment();
+    }
+
+    public void incrementRedisConnectionDrops(ConnectionKey connectionKey) {
+        redisConnectionsDrops.computeIfAbsent(connectionKey, this::createRedisConnectionsDrops).increment();
+    }
+
     public void incrementReconnectFailure(ConnectionKey connectionKey) {
         reconnectFailureCounter.computeIfAbsent(connectionKey, this::createReconnectFailedAttempCounter).increment();
         reconnectFailureTotalCounter.increment();
     }
 
-    private Timer createCommandLatencyTimer(String commandName) {
-        return Timer.builder("redis.command.latency").description(
+    public enum PubSubOperation {
+        SUBSCRIBE, UNSUBSCRIBE, PUBLISH, RECEIVE
+    }
+
+    public record PubSubOpKey(String channel, PubSubOperation operation, String subsriberId, OperationStatus status) {
+
+    }
+
+    public void incrementPubSubOperation(PubSubOpKey pubSubOpKey) {
+        pubSubOperationCounter.computeIfAbsent(pubSubOpKey, this::createPubSubOperationCounter).increment();
+    }
+
+    private Counter createPubSubOperationCounter(PubSubOpKey pubSubOpKey) {
+        return Counter.builder("redis.pubsub.operations.total")
+                .description("Total number of Redis pub/sub operations (publish and receive)")
+                .tag("channel", pubSubOpKey.channel).tag("operation_type", pubSubOpKey.operation.name().toLowerCase())
+                .tag("subscriber_id", pubSubOpKey.subsriberId).tag("status", pubSubOpKey.status.name().toLowerCase())
+                .register(meterRegistry);
+    }
+
+    private Timer createCommandLatencyTimer(CommandKey commandKey) {
+        return Timer.builder("redis.operation.duration").description(
                 "Measures the execution time of Redis commands from API invocation until command completion per command")
-                .tag("command", commandName).register(meterRegistry);
+                .tag("command", commandKey.commandName).tag("status", commandKey.status.name().toLowerCase())
+                .publishPercentileHistogram(true).publishPercentiles(0.5, 0.95, 0.99).register(meterRegistry);
     }
 
     private Timer createCommandLatencyTotalTimer() {
-        return Timer.builder("redis.command.total.latency")
+        return Timer.builder("redis.operation.total.duration")
                 .description("Measures the execution time of Redis commands from API invocation until command completion")
-                .register(meterRegistry);
+                .publishPercentileHistogram(true).publishPercentiles(0.5, 0.95, 0.99).register(meterRegistry);
     }
 
     private Counter createCommandErrorCounter(String commandName) {
@@ -142,10 +186,37 @@ public class MetricsReporter {
                 .tag("command", commandName).register(meterRegistry);
     }
 
+    private Counter createCommandTotalCounter(CommandKey commandKey) {
+        return Counter.builder("redis.operations.total")
+                .description("Counts the number of total Redis command API calls completed successfully or with an error")
+                .tag("command", commandKey.commandName).tag("status", commandKey.status.name().toLowerCase())
+                .register(meterRegistry);
+    }
+
     private Counter createCommandErrorTotalCounter() {
         return Counter.builder("redis.command.total.errors")
                 .description("Counts the number of failed Redis command API calls that completed with an exception")
                 .register(meterRegistry);
+    }
+
+    public record ReconnectAttemptKey(ConnectionKey connectionKey, OperationStatus status) {
+    }
+
+    private Counter createRedisConnectionsTotal(ReconnectAttemptKey reconnectAttempt) {
+        ConnectionKey connectionKey = reconnectAttempt.connectionKey;
+        OperationStatus status = reconnectAttempt.status;
+
+        return Counter.builder("redis.connections.total")
+                .description("Counts the number of Redis reconnect attempts per connection")
+                .tag("status", status.name().toLowerCase()).tag("epid", connectionKey.getEpId())
+                .tag("local", connectionKey.getLocalAddress().toString())
+                .tag("remote", connectionKey.getRemoteAddress().toString()).register(meterRegistry);
+    }
+
+    private Counter createRedisConnectionsDrops(ConnectionKey connectionKey) {
+        return Counter.builder("redis.connection.drops.total").description("Counts the number of disconnects")
+                .tag("epid", connectionKey.getEpId()).tag("local", connectionKey.getLocalAddress().toString())
+                .tag("remote", connectionKey.getRemoteAddress().toString()).register(meterRegistry);
     }
 
     private Counter createReconnectAttemptCounter(ConnectionKey connectionKey) {
@@ -212,6 +283,14 @@ public class MetricsReporter {
             dumpMetrics();
             log.info("MetricsReporter is stopped.");
         }
+    }
+
+    public static CommandKey cmdKeyOk(String commandName) {
+        return new CommandKey(commandName, OperationStatus.SUCCESS);
+    }
+
+    public static CommandKey cmdKeyError(String commandName, Throwable throwable) {
+        return new CommandKey(commandName, OperationStatus.ERROR);
     }
 
 }

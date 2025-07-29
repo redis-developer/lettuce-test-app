@@ -31,7 +31,7 @@ public abstract class BaseWorkload {
 
     private static final Logger log = LoggerFactory.getLogger(BaseWorkload.class);
 
-    private MetricsReporter metricsReporter;
+    protected MetricsReporter metricsReporter;
 
     private final CommonWorkloadOptions options;
 

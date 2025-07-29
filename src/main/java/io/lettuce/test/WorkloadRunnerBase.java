@@ -9,6 +9,7 @@ import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.cluster.event.ClusterTopologyChangedEvent;
 import io.lettuce.core.event.Event;
 import io.lettuce.core.event.EventBus;
+import io.lettuce.core.event.connection.DisconnectedEvent;
 import io.lettuce.core.event.connection.ReconnectAttemptEvent;
 import io.lettuce.core.event.connection.ReconnectEventHelper;
 import io.lettuce.core.event.connection.ReconnectFailedEvent;
@@ -24,6 +25,8 @@ import io.lettuce.test.config.WorkloadRunnerConfig.TimeoutOptionsConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.WorkloadConfig;
 import io.lettuce.test.metrics.ConnectionKey;
 import io.lettuce.test.metrics.MetricsReporter;
+import io.lettuce.test.metrics.MetricsReporter.ReconnectAttemptKey;
+import io.lettuce.test.metrics.OperationStatus;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -172,15 +175,15 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
 
             @Override
             public void run() {
-                Timer.Sample timer = metricsReporter.startTimer();
+                Timer.Sample timer = WorkloadRunnerBase.this.metricsReporter.startTimer();
                 try {
                     task.run();
-                    metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(), BaseWorkload.Status.SUCCESSFUL);
+                    WorkloadRunnerBase.this.metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(), BaseWorkload.Status.SUCCESSFUL);
                 } catch (Exception e) {
                     // Note: Use client and conn reference to track, which client and connection caused the error
                     // could not find other means to identify the client and connection
                     log.error("Error client: {} conn: {}", client, conn, e);
-                    metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(),
+                    WorkloadRunnerBase.this.metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(),
                             BaseWorkload.Status.COMPLETED_WITH_ERRORS);
                     throw e;
                 }
@@ -237,14 +240,19 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         Flux<Event> events = eventBus.get();
 
         events.subscribe(event -> {
-            if (event instanceof ReconnectAttemptEvent) {
-                ReconnectAttemptEvent reconnectEvent = (ReconnectAttemptEvent) event;
+            if (event instanceof ReconnectAttemptEvent reconnectEvent) {
                 ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
+                ReconnectAttemptKey reconnectionKey = new ReconnectAttemptKey(connectionKey, OperationStatus.INITIATED);
                 metricsReporter.incrementReconnectAttempt(connectionKey);
-            } else if (event instanceof ReconnectFailedEvent) {
-                ReconnectFailedEvent reconnectEvent = (ReconnectFailedEvent) event;
+                metricsReporter.incrementRedisConnectionAttempt(reconnectionKey);
+            } else if (event instanceof ReconnectFailedEvent reconnectEvent) {
                 ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(reconnectEvent);
+                ReconnectAttemptKey reconnectionKey = new ReconnectAttemptKey(connectionKey, OperationStatus.ERROR);
                 metricsReporter.incrementReconnectFailure(connectionKey);
+                metricsReporter.incrementRedisConnectionAttempt(reconnectionKey);
+            } else if (event instanceof DisconnectedEvent disconnectedEvent) {
+                ConnectionKey connectionKey = ReconnectEventHelper.connectionKey(disconnectedEvent);
+                metricsReporter.incrementRedisConnectionDrops(connectionKey);
             } else if (event instanceof ClusterTopologyChangedEvent) {
                 ClusterTopologyChangedEvent ctcEvent = (ClusterTopologyChangedEvent) event;
                 log.info("ClusterTopologyChangedEvent: before={}, after={}", ctcEvent.before(), ctcEvent.after());
@@ -337,7 +345,8 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
                 timeoutsRelaxingDuringMaintenance.invoke(builder, config.getTimeoutsRelaxingDuringMaintenance());
                 log.info("ProactiveTimeoutsRelaxingMethod enabled successfully.");
             } catch (NoSuchMethodException e) {
-                throw new IllegalStateException("The method 'timeoutsRelaxingDuringMaintenance' is not available in this build.", e);
+                throw new IllegalStateException(
+                        "The method 'timeoutsRelaxingDuringMaintenance' is not available in this build.", e);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException("Failed to invoke 'timeoutsRelaxingDuringMaintenance' method.", e);
             }

@@ -1,5 +1,6 @@
 package io.lettuce.test.metrics;
 
+import io.lettuce.core.LettuceVersion;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig;
@@ -17,9 +18,24 @@ public class MeterRegistryConfiguration {
     @Value("${runId:${runner.test.workload.type}-#{T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(8)}}")
     private String runId;
 
+    @Value("${instanceId:${spring.application.name}-#{T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(8)}}")
+    private String instanceId;
+
+    @Value("${appName:lettuce-test-app}")
+    private String appName;
+
     @Bean
     public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
-        return (registry) -> registry.config().commonTags("runId", runId);
+        return (registry) -> {
+            registry.config().commonTags("app_name", appName).commonTags("run_id", runId).commonTags("instance_id", instanceId)
+                    .commonTags("version", LettuceVersion.getVersion());
+
+            // Ensure OTLP registry accepts all redis metrics
+            if (registry.getClass().getSimpleName().contains("Otlp")) {
+                registry.config().meterFilter(MeterFilter.acceptNameStartsWith("redis"))
+                        .meterFilter(MeterFilter.acceptNameStartsWith("lettuce"));
+            }
+        };
     }
 
     @Bean
@@ -56,8 +72,7 @@ public class MeterRegistryConfiguration {
 
     // * Deny all meters by default and accept only specific meters for metrics stored in logs
     private void meterFilters(MeterRegistry registry) {
-        registry.config().meterFilter(MeterFilter.acceptNameStartsWith("redis.command"))
-                .meterFilter(MeterFilter.acceptNameStartsWith("redis.workload"))
+        registry.config().meterFilter(MeterFilter.acceptNameStartsWith("redis"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.connect"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.reconnect"))
                 .meterFilter(MeterFilter.acceptNameStartsWith("lettuce.reconnection")).meterFilter(MeterFilter.deny());

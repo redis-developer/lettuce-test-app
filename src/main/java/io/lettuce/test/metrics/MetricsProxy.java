@@ -9,6 +9,9 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import static io.lettuce.test.metrics.MetricsReporter.cmdKeyError;
+import static io.lettuce.test.metrics.MetricsReporter.cmdKeyOk;
+
 public class MetricsProxy<T> implements InvocationHandler {
 
     private static final Logger log = LoggerFactory.getLogger(MetricsProxy.class);
@@ -39,17 +42,20 @@ public class MetricsProxy<T> implements InvocationHandler {
                 command.whenComplete((res, ex) -> {
                     if (ex != null) {
                         metricsReporter.incrementCommandError(commandName);
+                        metricsReporter.recordCommandLatency(cmdKeyError(commandName, ex), sample);
                         log.error("Command failed", ex);
+                    } else {
+                        metricsReporter.recordCommandLatency(cmdKeyOk(commandName), sample);
                     }
-                    metricsReporter.recordCommandLatency(commandName, sample);
                 });
                 return result;
             }
 
-            metricsReporter.recordCommandLatency(commandName, sample);
+            metricsReporter.recordCommandLatency(cmdKeyOk(commandName), sample);
             return result;
         } catch (InvocationTargetException ex) {
             metricsReporter.incrementCommandError(commandName);
+            metricsReporter.recordCommandLatency(cmdKeyError(commandName, ex.getCause()), sample);
             log.error("Command failed", ex.getCause());
             throw ex.getCause();
         }
