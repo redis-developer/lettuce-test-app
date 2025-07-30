@@ -178,7 +178,8 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
                 Timer.Sample timer = WorkloadRunnerBase.this.metricsReporter.startTimer();
                 try {
                     task.run();
-                    WorkloadRunnerBase.this.metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(), BaseWorkload.Status.SUCCESSFUL);
+                    WorkloadRunnerBase.this.metricsReporter.recordWorkloadExecutionDuration(timer, config.getType(),
+                            BaseWorkload.Status.SUCCESSFUL);
                 } catch (Exception e) {
                     // Note: Use client and conn reference to track, which client and connection caused the error
                     // could not find other means to identify the client and connection
