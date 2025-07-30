@@ -1,5 +1,7 @@
 package io.lettuce.test.metrics;
 
+import io.lettuce.core.LettuceVersion;
+import io.lettuce.test.config.TestRunProperties;
 import io.lettuce.test.workloads.BaseWorkload;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -14,11 +16,19 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.io.IOException;
 import java.lang.reflect.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -28,14 +38,30 @@ public class MetricsReporter {
 
     private static final Logger log = LoggerFactory.getLogger("simple-metrics-reporter");
 
+    public static final String REDIS_OPERATION_DURATION_TOTAL = "redis.operation.duration.total";
+
+    public static final String REDIS_OPERATION_DURATION = "redis.operation.duration";
+
+    public static final String REDIS_RECONNECTION_DURATION = "redis.reconnection.duration";
+
+    public static final String REDIS_TEST_DURATION = "redis.test.duration";
+
     private final MeterRegistry meterRegistry;
 
     private final SimpleMeterRegistry simpleMeterRegistry;
 
     private final TaskScheduler taskScheduler;
 
+    private final TestRunProperties testRunProperties;
+
     @Value("${simple.metrics.dumpRate:PT5S}")
     private Duration dumpRate;
+
+    @Value("${logging.file.path:logs}")
+    private String logPath;
+
+    @Value("${runner.test.workload.type}")
+    private String workloadType;
 
     private final Map<CommandKey, Timer> commandLatencyTimers = new ConcurrentHashMap<>();
 
@@ -67,10 +93,17 @@ public class MetricsReporter {
 
     private ScheduledFuture<?> scheduledFuture;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private volatile Instant testRunStart;
+
+    private volatile Instant testRunEnd;
+
     public MetricsReporter(MeterRegistry meterRegistry, SimpleMeterRegistry simpleMeterRegistry,
-            @Qualifier("metricReporterScheduler") TaskScheduler taskScheduler) {
+            @Qualifier("metricReporterScheduler") TaskScheduler taskScheduler, TestRunProperties testRunProperties) {
         this.meterRegistry = meterRegistry;
         this.simpleMeterRegistry = simpleMeterRegistry;
+        this.testRunProperties = testRunProperties;
         this.connectionSuccessTimer = Timer.builder("lettuce.connect.success")
                 .description("Measures the duration and count of successful Redis connections").register(meterRegistry);
         this.connectionFailureTimer = Timer.builder("lettuce.connect.failure")
@@ -93,6 +126,15 @@ public class MetricsReporter {
 
     Timer.Sample startCommandTimer() {
         return Timer.start(meterRegistry);
+    }
+
+    public void recordTestDuration(Instant start, Instant end) {
+        this.testRunStart = start;
+        this.testRunEnd = end;
+        Timer.builder(REDIS_TEST_DURATION)
+                .description("Measures the duration of the test run")
+                .register(meterRegistry)
+                .record(Duration.between(start, end));
     }
 
     public record CommandKey(String commandName, OperationStatus status) {
@@ -167,17 +209,19 @@ public class MetricsReporter {
                 .register(meterRegistry);
     }
 
-    private Timer createCommandLatencyTimer(CommandKey commandKey) {
-        return Timer.builder("redis.operation.duration").description(
+        private Timer createCommandLatencyTimer(CommandKey commandKey) {
+        return Timer.builder(REDIS_OPERATION_DURATION).description(
                 "Measures the execution time of Redis commands from API invocation until command completion per command")
                 .tag("command", commandKey.commandName).tag("status", commandKey.status.name().toLowerCase())
                 .publishPercentileHistogram(true).publishPercentiles(0.5, 0.95, 0.99).register(meterRegistry);
     }
 
     private Timer createCommandLatencyTotalTimer() {
-        return Timer.builder("redis.operation.total.duration")
+        return Timer.builder(REDIS_OPERATION_DURATION_TOTAL)
                 .description("Measures the execution time of Redis commands from API invocation until command completion")
-                .publishPercentileHistogram(true).publishPercentiles(0.5, 0.95, 0.99).register(meterRegistry);
+                .publishPercentileHistogram(true)
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .register(meterRegistry);
     }
 
     private Counter createCommandErrorCounter(String commandName) {
@@ -273,16 +317,147 @@ public class MetricsReporter {
     @PostConstruct
     public void startScheduledTask() {
         scheduledFuture = taskScheduler.scheduleAtFixedRate(this::dumpMetrics, dumpRate);
+        taskScheduler.scheduleAtFixedRate(this::dumpFinalResult, dumpRate);
     }
 
     @PreDestroy
     public void shutdown() {
         log.info("MetricsReporter is shutting down.");
+        dumpFinalResult();
         if (scheduledFuture != null) {
             scheduledFuture.cancel(true);
             dumpMetrics();
             log.info("MetricsReporter is stopped.");
         }
+    }
+
+    public void dumpFinalResult() {
+
+        try {
+            ObjectNode result = buildFinalResultJson();
+            String jsonResult = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result);
+
+            // Log to console
+            log.info("=== FINAL TEST RESULTS ===");
+            log.info(jsonResult);
+            log.info("=== END FINAL TEST RESULTS ===");
+
+            // Write to file
+            writeResultsToFile(jsonResult);
+
+        } catch (Exception e) {
+            log.error("Error generating final result", e);
+        }
+    }
+
+    private void writeResultsToFile(String jsonResult) {
+        try {
+            // Create logs directory if it doesn't exist
+            Path logDir = Paths.get(logPath);
+            if (!Files.exists(logDir)) {
+                Files.createDirectories(logDir);
+                log.info("Created log directory: {}", logDir.toAbsolutePath());
+            }
+
+            // Write to test-run-summary.json
+            Path summaryFile = logDir.resolve("test-run-summary.json");
+            Files.write(summaryFile, jsonResult.getBytes());
+            log.info("Final test results written to: {}", summaryFile.toAbsolutePath());
+
+        } catch (IOException e) {
+            log.error("Failed to write final results to file", e);
+        }
+    }
+
+    public String getFinalResultAsJson() {
+        try {
+            ObjectNode result = buildFinalResultJson();
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result);
+        } catch (Exception e) {
+            log.error("Error generating final result JSON", e);
+            return "{}";
+        }
+    }
+
+    private ObjectNode buildFinalResultJson() {
+        ObjectNode result = objectMapper.createObjectNode();
+
+        // Basic run information
+        result.put("app_name", testRunProperties.getAppName());
+        result.put("instance_id", testRunProperties.getInstanceId());
+        result.put("run_id", testRunProperties.getRunId());
+        result.put("version", LettuceVersion.getVersion());
+
+        // Test duration
+        result.put("workload_name", workloadType != null ? workloadType : "unknown");
+
+        // Command counts and success rate
+        long totalCommands = getTotalCmdCount();
+        long successfulCommands = getSuccessfulCommandCount();
+        long failedCommands = getFailedCommandCount();
+
+        result.put("total_commands_count", totalCommands);
+        result.put("successful_commands_count", successfulCommands);
+        result.put("failed_commands_count", failedCommands);
+        result.put("success_rate",
+                String.format("%.2f%%", totalCommands > 0 ? (successfulCommands * 100.0 / totalCommands) : 0.0));
+
+        // Reconnection metrics
+        result.put("avg_reconnection_duration_ms", getAverageReconnectionDuration().orElseGet(() -> 0.0));
+
+        // Run timestamps (as epoch seconds with decimals)
+        result.put("run_start", testRunStart.getEpochSecond());
+        result.put("run_end", testRunEnd.getEpochSecond());
+
+        // Latency statistics
+        result.put("min_latency_ms", 0);
+        result.put("max_latency_ms", getMaxLatency().orElse(0.0));
+        result.put("median_latency_ms", getMedianLatency().orElse(0.0));
+        result.put("p95_latency_ms", getP95Latency().orElse(0.0));
+        result.put("p99_latency_ms", getP99().orElse(0.0));
+
+        return result;
+    }
+
+    private OptionalDouble getMedianLatency() {
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream().mapToDouble( m-> m.percentile(0.5, TimeUnit.MILLISECONDS)).average();
+    }
+
+    private OptionalDouble getP95Latency() {
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream().mapToDouble( m-> m.percentile(0.95, TimeUnit.MILLISECONDS)).average();
+    }
+
+    private OptionalDouble getP99() {
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream().mapToDouble( m-> m.percentile(0.99, TimeUnit.MILLISECONDS)).average();
+    }
+
+    private OptionalDouble getAverageReconnectionDuration() {
+        return simpleMeterRegistry.find(REDIS_RECONNECTION_DURATION).timers().stream().mapToDouble( m-> m.mean(TimeUnit.MILLISECONDS)).average();
+
+    }
+
+    private OptionalDouble getMaxLatency() {
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).timers().stream().mapToDouble( m-> m.max(TimeUnit.MILLISECONDS)).max();
+    }
+
+    private long getTotalCmdCount() {
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).timers().stream().mapToLong(Timer::count).sum();
+    }
+
+    private long getSuccessfulCommandCount() {
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION)
+                .tag("status", "success")
+                .timers()
+                .stream()
+                .mapToLong(Timer::count).sum();
+    }
+
+    private long getFailedCommandCount() {
+        return  simpleMeterRegistry.find(REDIS_OPERATION_DURATION)
+                .tag("status", "error")
+                .timers()
+                .stream()
+                .mapToLong(Timer::count).sum();
     }
 
     public static CommandKey cmdKeyOk(String commandName) {

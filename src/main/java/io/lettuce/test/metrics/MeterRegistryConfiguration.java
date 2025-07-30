@@ -1,11 +1,11 @@
 package io.lettuce.test.metrics;
 
 import io.lettuce.core.LettuceVersion;
+import io.lettuce.test.config.TestRunProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,19 +15,18 @@ import org.springframework.core.env.Environment;
 @Configuration(proxyBeanMethods = false)
 public class MeterRegistryConfiguration {
 
-    @Value("${runId:${runner.test.workload.type}-#{T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(8)}}")
-    private String runId;
+    private final TestRunProperties testRunProperties;
 
-    @Value("${instanceId:${spring.application.name}-#{T(org.apache.commons.lang3.RandomStringUtils).randomAlphanumeric(8)}}")
-    private String instanceId;
-
-    @Value("${appName:lettuce-test-app}")
-    private String appName;
+    public MeterRegistryConfiguration(TestRunProperties testRunProperties) {
+        this.testRunProperties = testRunProperties;
+    }
 
     @Bean
     public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
         return (registry) -> {
-            registry.config().commonTags("app_name", appName).commonTags("run_id", runId).commonTags("instance_id", instanceId)
+            registry.config().commonTags("app_name", testRunProperties.getAppName())
+                    .commonTags("run_id", testRunProperties.getRunId())
+                    .commonTags("instance_id", testRunProperties.getInstanceId())
                     .commonTags("version", LettuceVersion.getVersion());
 
             // Ensure OTLP registry accepts all redis metrics

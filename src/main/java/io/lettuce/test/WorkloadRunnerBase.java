@@ -38,6 +38,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -87,12 +88,15 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             }
         }
 
+        Instant start = Instant.now();
         try {
             CompletableFuture<Void> workloadsFuture = executeWorkloads(clients, connections);
             workloadsFuture.thenRun(() -> log.info("All tasks completed. Exiting..."));
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
+            Instant end = Instant.now();
+            metricsReporter.recordTestDuration(start, end);
             executor.shutdown();
         }
     }
