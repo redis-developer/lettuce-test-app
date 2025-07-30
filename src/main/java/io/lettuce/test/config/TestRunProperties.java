@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class TestRunProperties {
+
     /**
      * Unique identifier for the test run. Defaults to workload type + random alphanumeric string.
      */
