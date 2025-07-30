@@ -131,9 +131,7 @@ public class MetricsReporter {
     public void recordTestDuration(Instant start, Instant end) {
         this.testRunStart = start;
         this.testRunEnd = end;
-        Timer.builder(REDIS_TEST_DURATION)
-                .description("Measures the duration of the test run")
-                .register(meterRegistry)
+        Timer.builder(REDIS_TEST_DURATION).description("Measures the duration of the test run").register(meterRegistry)
                 .record(Duration.between(start, end));
     }
 
@@ -209,7 +207,7 @@ public class MetricsReporter {
                 .register(meterRegistry);
     }
 
-        private Timer createCommandLatencyTimer(CommandKey commandKey) {
+    private Timer createCommandLatencyTimer(CommandKey commandKey) {
         return Timer.builder(REDIS_OPERATION_DURATION).description(
                 "Measures the execution time of Redis commands from API invocation until command completion per command")
                 .tag("command", commandKey.commandName).tag("status", commandKey.status.name().toLowerCase())
@@ -219,9 +217,7 @@ public class MetricsReporter {
     private Timer createCommandLatencyTotalTimer() {
         return Timer.builder(REDIS_OPERATION_DURATION_TOTAL)
                 .description("Measures the execution time of Redis commands from API invocation until command completion")
-                .publishPercentileHistogram(true)
-                .publishPercentiles(0.5, 0.95, 0.99)
-                .register(meterRegistry);
+                .publishPercentileHistogram(true).publishPercentiles(0.5, 0.95, 0.99).register(meterRegistry);
     }
 
     private Counter createCommandErrorCounter(String commandName) {
@@ -420,24 +416,29 @@ public class MetricsReporter {
     }
 
     private OptionalDouble getMedianLatency() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream().mapToDouble( m-> m.percentile(0.5, TimeUnit.MILLISECONDS)).average();
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream()
+                .mapToDouble(m -> m.percentile(0.5, TimeUnit.MILLISECONDS)).average();
     }
 
     private OptionalDouble getP95Latency() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream().mapToDouble( m-> m.percentile(0.95, TimeUnit.MILLISECONDS)).average();
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream()
+                .mapToDouble(m -> m.percentile(0.95, TimeUnit.MILLISECONDS)).average();
     }
 
     private OptionalDouble getP99() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream().mapToDouble( m-> m.percentile(0.99, TimeUnit.MILLISECONDS)).average();
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream()
+                .mapToDouble(m -> m.percentile(0.99, TimeUnit.MILLISECONDS)).average();
     }
 
     private OptionalDouble getAverageReconnectionDuration() {
-        return simpleMeterRegistry.find(REDIS_RECONNECTION_DURATION).timers().stream().mapToDouble( m-> m.mean(TimeUnit.MILLISECONDS)).average();
+        return simpleMeterRegistry.find(REDIS_RECONNECTION_DURATION).timers().stream()
+                .mapToDouble(m -> m.mean(TimeUnit.MILLISECONDS)).average();
 
     }
 
     private OptionalDouble getMaxLatency() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).timers().stream().mapToDouble( m-> m.max(TimeUnit.MILLISECONDS)).max();
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).timers().stream()
+                .mapToDouble(m -> m.max(TimeUnit.MILLISECONDS)).max();
     }
 
     private long getTotalCmdCount() {
@@ -445,18 +446,12 @@ public class MetricsReporter {
     }
 
     private long getSuccessfulCommandCount() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION)
-                .tag("status", "success")
-                .timers()
-                .stream()
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).tag("status", "success").timers().stream()
                 .mapToLong(Timer::count).sum();
     }
 
     private long getFailedCommandCount() {
-        return  simpleMeterRegistry.find(REDIS_OPERATION_DURATION)
-                .tag("status", "error")
-                .timers()
-                .stream()
+        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).tag("status", "error").timers().stream()
                 .mapToLong(Timer::count).sum();
     }
 
