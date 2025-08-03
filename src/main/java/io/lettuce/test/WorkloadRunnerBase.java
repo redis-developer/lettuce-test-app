@@ -91,15 +91,18 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
             }
         }
 
-        Instant start = Instant.now();
+        metricsReporter.recordStartTime();
         try {
             CompletableFuture<Void> workloadsFuture = executeWorkloads(clients, connections);
-            workloadsFuture.thenRun(() -> log.info("All tasks completed. Exiting..."));
+            workloadsFuture.whenComplete((result, throwable) -> {
+                metricsReporter.recordEndTime();
+                if (throwable != null) {
+                    log.error("Workload failed: ", throwable);
+                }
+            }).thenRun(() -> log.info("All tasks completed. Exiting..."));
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            Instant end = Instant.now();
-            metricsReporter.recordTestDuration(start, end);
             executor.shutdown();
         }
     }
