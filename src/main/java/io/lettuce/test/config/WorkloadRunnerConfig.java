@@ -363,7 +363,7 @@ public class WorkloadRunnerConfig {
 
         private Boolean autoReconnect;
 
-        private Boolean supportMaintenanceEvents;
+        private MaintenanceEventsConfig maintenanceEventsConfig;
 
         private Boolean pingBeforeActivate;
 
@@ -388,12 +388,12 @@ public class WorkloadRunnerConfig {
             this.autoReconnect = autoReconnect;
         }
 
-        public Boolean getSupportMaintenanceEvents() {
-            return supportMaintenanceEvents;
+        public MaintenanceEventsConfig getMaintenanceEventsConfig() {
+            return maintenanceEventsConfig;
         }
 
-        public void setSupportMaintenanceEvents(Boolean supportMaintenanceEvents) {
-            this.supportMaintenanceEvents = supportMaintenanceEvents;
+        public void setMaintenanceEventsConfig(MaintenanceEventsConfig supportMaintenanceEvents) {
+            this.maintenanceEventsConfig = supportMaintenanceEvents;
         }
 
         public Boolean getPingBeforeActivate() {
@@ -446,7 +446,7 @@ public class WorkloadRunnerConfig {
 
         @Override
         public String toString() {
-            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", proactiveRebind=" + supportMaintenanceEvents
+            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", proactiveRebind=" + maintenanceEventsConfig
                     + ", pingBeforeActivate=" + pingBeforeActivate + ", requestQueueSize=" + requestQueueSize
                     + ", timeoutOptions=" + timeoutOptions + ", socketOptions=" + socketOptions + ", disconnectedBehavior='"
                     + disconnectedBehavior + '\'' + ", reconnectOptions=" + reconnectOptions + '}';
@@ -644,6 +644,30 @@ public class WorkloadRunnerConfig {
         @Override
         public String toString() {
             return "KeepAliveOptionsConfig{" + "interval=" + interval + ", idle=" + idle + ", count=" + count + '}';
+        }
+
+    }
+
+    public static class MaintenanceEventsConfig {
+
+        boolean enabled;
+
+        String movingEndpointAddressType;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getMovingEndpointAddressType() {
+            return movingEndpointAddressType;
+        }
+
+        public void setMovingEndpointAddressType(String movingEndpointAddressType) {
+            this.movingEndpointAddressType = movingEndpointAddressType;
         }
 
     }

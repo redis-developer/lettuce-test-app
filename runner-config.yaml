@@ -39,7 +39,9 @@ runner:
       commandLatencyMonitoring: true # Enables Lettuce internal command latency monitoring
       connectionMonitoring: true     # Enables Additional metrics for connection inactive time. Note supported with GA build of lettuce, and required custom Lettuce client build.  See README.md for instruction ho to enable them
     autoReconnect: true
-    supportMaintenanceEvents: false
+    maintenanceEventsConfig:
+      enabled: true
+      movingEndpointAddressType: PUBLIC_IP
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #pingBeforeActivate: false
