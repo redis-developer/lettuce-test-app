@@ -7,6 +7,8 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.distribution.HistogramSnapshot;
+import io.micrometer.core.instrument.distribution.ValueAtPercentile;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -26,12 +28,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 public class MetricsReporter {
@@ -128,11 +134,14 @@ public class MetricsReporter {
         return Timer.start(meterRegistry);
     }
 
-    public void recordTestDuration(Instant start, Instant end) {
-        this.testRunStart = start;
-        this.testRunEnd = end;
+    public void recordStartTime() {
+        this.testRunStart = Instant.now();
+    }
+
+    public void recordEndTime() {
+        this.testRunEnd = Instant.now();
         Timer.builder(REDIS_TEST_DURATION).description("Measures the duration of the test run").register(meterRegistry)
-                .record(Duration.between(start, end));
+                .record(Duration.between(testRunStart, testRunEnd));
     }
 
     public record CommandKey(String commandName, OperationStatus status) {
@@ -365,16 +374,6 @@ public class MetricsReporter {
         }
     }
 
-    public String getFinalResultAsJson() {
-        try {
-            ObjectNode result = buildFinalResultJson();
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result);
-        } catch (Exception e) {
-            log.error("Error generating final result JSON", e);
-            return "{}";
-        }
-    }
-
     private ObjectNode buildFinalResultJson() {
         ObjectNode result = objectMapper.createObjectNode();
 
@@ -388,71 +387,97 @@ public class MetricsReporter {
         result.put("workload_name", workloadType != null ? workloadType : "unknown");
 
         // Command counts and success rate
-        long totalCommands = getTotalCmdCount();
-        long successfulCommands = getSuccessfulCommandCount();
-        long failedCommands = getFailedCommandCount();
-
-        result.put("total_commands_count", totalCommands);
-        result.put("successful_commands_count", successfulCommands);
-        result.put("failed_commands_count", failedCommands);
+        RedisOperationsStatsSummary redisOperationsStatsSummary = getRedisOperationsStatsSummary();
+        result.put("total_commands_count", redisOperationsStatsSummary.totalCommands);
+        result.put("successful_commands_count", redisOperationsStatsSummary.successfulCommands);
+        result.put("failed_commands_count", redisOperationsStatsSummary.failedCommands);
         result.put("success_rate",
-                String.format("%.2f%%", totalCommands > 0 ? (successfulCommands * 100.0 / totalCommands) : 0.0));
+                String.format("%.2f%%", redisOperationsStatsSummary.totalCommands > 0
+                        ? (redisOperationsStatsSummary.successfulCommands * 100.0 / redisOperationsStatsSummary.totalCommands)
+                        : 0.0));
 
         // Reconnection metrics
         result.put("avg_reconnection_duration_ms", getAverageReconnectionDuration().orElseGet(() -> 0.0));
 
         // Run timestamps (as epoch seconds with decimals)
-        result.put("run_start", testRunStart.getEpochSecond());
-        result.put("run_end", testRunEnd.getEpochSecond());
+        ;
+        result.put("run_start", testRunStart != null ? testRunStart.getEpochSecond() : -1);
+        result.put("run_end", testRunEnd != null ? testRunEnd.getEpochSecond() : -1);
 
         // Latency statistics
-        result.put("min_latency_ms", 0);
-        result.put("max_latency_ms", getMaxLatency().orElse(0.0));
-        result.put("median_latency_ms", getMedianLatency().orElse(0.0));
-        result.put("p95_latency_ms", getP95Latency().orElse(0.0));
-        result.put("p99_latency_ms", getP99().orElse(0.0));
+        LatencyStats latencyStats = getLatencyStats();
+        result.put("min_latency_ms", latencyStats.min);
+        result.put("max_latency_ms", latencyStats.max());
+        result.put("median_latency_ms", latencyStats.median);
+        result.put("p95_latency_ms", latencyStats.p95);
+        result.put("p99_latency_ms", latencyStats.p99);
 
         return result;
     }
 
-    private OptionalDouble getMedianLatency() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream()
-                .mapToDouble(m -> m.percentile(0.5, TimeUnit.MILLISECONDS)).average();
+    record RedisOperationsStatsSummary(long totalCommands, long successfulCommands, long failedCommands) {
     }
 
-    private OptionalDouble getP95Latency() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream()
-                .mapToDouble(m -> m.percentile(0.95, TimeUnit.MILLISECONDS)).average();
+    private RedisOperationsStatsSummary getRedisOperationsStatsSummary() {
+        // Command counts and success rate
+        long totalCommands = 0;
+        long successfulCommands = 0;
+        long failedCommands = 0;
+        Collection<Timer> operationDurationTimers = simpleMeterRegistry.find(REDIS_OPERATION_DURATION).timers();
+        for (Timer m : operationDurationTimers) {
+            String status = m.getId().getTag("status");
+            if (status == null) {
+                totalCommands += m.count();
+            } else {
+                switch (status) {
+                    case "success":
+                        totalCommands += m.count();
+                        successfulCommands += m.count();
+                        break;
+                    case "error":
+                        totalCommands += m.count();
+                        failedCommands += m.count();
+                        break;
+                    default:
+                        totalCommands += m.count();
+                        break;
+                }
+            }
+        }
+
+        return new RedisOperationsStatsSummary(totalCommands, successfulCommands, failedCommands);
     }
 
-    private OptionalDouble getP99() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timers().stream()
-                .mapToDouble(m -> m.percentile(0.99, TimeUnit.MILLISECONDS)).average();
+    record LatencyStats(double min, double max, double median, double p95, double p99) {
+    }
+
+    private LatencyStats getLatencyStats() {
+        Timer durationTotalTimer = simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timer();
+        if (durationTotalTimer == null) {
+            return new LatencyStats(-1, -1, -1, -1, -1);
+        }
+        HistogramSnapshot snapshot = durationTotalTimer.takeSnapshot();
+        ValueAtPercentile[] percentiles = snapshot.percentileValues();
+        double median = -1;
+        double p95 = -1;
+        double p99 = -1;
+        for (ValueAtPercentile p : percentiles) {
+            if (p.percentile() == 0.5) {
+                median = p.value(TimeUnit.MILLISECONDS);
+            } else if (p.percentile() == 0.95) {
+                p95 = p.value(TimeUnit.MILLISECONDS);
+            } else if (p.percentile() == 0.99) {
+                p99 = p.value(TimeUnit.MILLISECONDS);
+            }
+        }
+
+        return new LatencyStats(0, snapshot.max(), median, p95, p99);
     }
 
     private OptionalDouble getAverageReconnectionDuration() {
         return simpleMeterRegistry.find(REDIS_RECONNECTION_DURATION).timers().stream()
                 .mapToDouble(m -> m.mean(TimeUnit.MILLISECONDS)).average();
 
-    }
-
-    private OptionalDouble getMaxLatency() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).timers().stream()
-                .mapToDouble(m -> m.max(TimeUnit.MILLISECONDS)).max();
-    }
-
-    private long getTotalCmdCount() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).timers().stream().mapToLong(Timer::count).sum();
-    }
-
-    private long getSuccessfulCommandCount() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).tag("status", "success").timers().stream()
-                .mapToLong(Timer::count).sum();
-    }
-
-    private long getFailedCommandCount() {
-        return simpleMeterRegistry.find(REDIS_OPERATION_DURATION).tag("status", "error").timers().stream()
-                .mapToLong(Timer::count).sum();
     }
 
     public static CommandKey cmdKeyOk(String commandName) {
