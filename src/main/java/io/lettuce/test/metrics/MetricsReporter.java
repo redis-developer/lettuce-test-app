@@ -406,11 +406,11 @@ public class MetricsReporter {
 
         // Latency statistics
         LatencyStats latencyStats = getLatencyStats();
-        result.put("min_latency_ms", latencyStats.min);
+        result.put("min_latency_ms", latencyStats.min());
         result.put("max_latency_ms", latencyStats.max());
-        result.put("median_latency_ms", latencyStats.median);
-        result.put("p95_latency_ms", latencyStats.p95);
-        result.put("p99_latency_ms", latencyStats.p99);
+        result.put("median_latency_ms", latencyStats.median());
+        result.put("p95_latency_ms", latencyStats.p95());
+        result.put("p99_latency_ms", latencyStats.p99());
 
         return result;
     }
@@ -471,7 +471,7 @@ public class MetricsReporter {
             }
         }
 
-        return new LatencyStats(0, snapshot.max(), median, p95, p99);
+        return new LatencyStats(0, snapshot.max(TimeUnit.MILLISECONDS), median, p95, p99);
     }
 
     private OptionalDouble getAverageReconnectionDuration() {
