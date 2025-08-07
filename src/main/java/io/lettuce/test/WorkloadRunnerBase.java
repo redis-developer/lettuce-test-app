@@ -3,7 +3,7 @@ package io.lettuce.test;
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.MaintenanceEventsOptions;
-import io.lettuce.core.MaintenanceEventsOptions.EndpointAddressType;
+import io.lettuce.core.MaintenanceEventsOptions.AddressType;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
@@ -318,9 +318,18 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
 
             if (config.getMaintenanceEventsConfig() != null) {
                 MaintenanceEventsConfig maintEventsCfg = config.getMaintenanceEventsConfig();
-                MaintenanceEventsOptions maintenanceEventsOptions = MaintenanceEventsOptions
-                        .enabled(EndpointAddressType.valueOf(maintEventsCfg.getMovingEndpointAddressType()));
-                builder.supportMaintenanceEvents(maintenanceEventsOptions);
+                if (maintEventsCfg.isEnabled()) {
+                    MaintenanceEventsOptions options;
+                    if (maintEventsCfg.getMovingEndpointAddressType() != null) {
+                        AddressType addrType = AddressType.valueOf(maintEventsCfg.getMovingEndpointAddressType());
+                        options = MaintenanceEventsOptions.enabled(addrType);
+                        log.info("Enabling supportMaintenanceEvents with address type: {}", addrType);
+                    } else {
+                        options = MaintenanceEventsOptions.enabled();
+                        log.info("Enabling supportMaintenanceEvents with default (auto resolve) address type.");
+                    }
+                    builder.supportMaintenanceEvents(options);
+                }
             }
 
             if (config.getPingBeforeActivate() != null) {
