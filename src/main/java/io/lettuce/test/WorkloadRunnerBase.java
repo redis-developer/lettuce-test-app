@@ -2,6 +2,8 @@ package io.lettuce.test;
 
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.MaintenanceEventsOptions;
+import io.lettuce.core.MaintenanceEventsOptions.AddressType;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
@@ -19,6 +21,7 @@ import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.Delay;
 import io.lettuce.test.config.WorkloadRunnerConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.ClientOptionsConfig;
+import io.lettuce.test.config.WorkloadRunnerConfig.MaintenanceEventsConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.SocketOptionsConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.TcpUserTimeoutOptionsConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.TimeoutOptionsConfig;
@@ -313,8 +316,20 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
                 builder.autoReconnect(config.getAutoReconnect());
             }
 
-            if (config.getSupportMaintenanceEvents() != null) {
-                OptionalClientOptions.applySupportMaintenanceEventsOption(builder, config.getSupportMaintenanceEvents());
+            if (config.getMaintenanceEventsConfig() != null) {
+                MaintenanceEventsConfig maintEventsCfg = config.getMaintenanceEventsConfig();
+                if (maintEventsCfg.isEnabled()) {
+                    MaintenanceEventsOptions options;
+                    if (maintEventsCfg.getMovingEndpointAddressType() != null) {
+                        AddressType addrType = AddressType.valueOf(maintEventsCfg.getMovingEndpointAddressType());
+                        options = MaintenanceEventsOptions.enabled(addrType);
+                        log.info("Enabling supportMaintenanceEvents with address type: {}", addrType);
+                    } else {
+                        options = MaintenanceEventsOptions.enabled();
+                        log.info("Enabling supportMaintenanceEvents with default (auto resolve) address type.");
+                    }
+                    builder.supportMaintenanceEvents(options);
+                }
             }
 
             if (config.getPingBeforeActivate() != null) {
@@ -404,7 +419,7 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
 
     static class OptionalClientOptions {
 
-        static public void applySupportMaintenanceEventsOption(ClientOptions.Builder builder, boolean value) {
+        static public void applySupportMaintenanceEventsOption(ClientOptions.Builder builder, MaintenanceEventsConfig value) {
             try {
                 Method method = builder.getClass().getMethod("supportMaintenanceEvents", boolean.class);
                 method.invoke(builder, value);
