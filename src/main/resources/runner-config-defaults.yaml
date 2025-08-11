@@ -35,7 +35,9 @@ runner:
 
   #clientOptions:
     #autoReconnect: true
-    #supportMaintenanceEvents: false
+    #maintenanceEventsConfig:
+    #  enabled: true
+    #  movingEndpointAddressType: EXTERNAL_IP # INTERNAL_IP, INTERNAL_FQDN, EXTERNAL_IP, EXTERNAL_FQDN
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #  proactiveTimeoutsRelaxing: PT0.500S # 500 ms

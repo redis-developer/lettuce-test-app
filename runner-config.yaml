@@ -41,7 +41,7 @@ runner:
     autoReconnect: true
     maintenanceEventsConfig:
       enabled: true
-      movingEndpointAddressType: PUBLIC_IP
+      movingEndpointAddressType: EXTERNAL_IP # INTERNAL_IP, INTERNAL_FQDN, EXTERNAL_IP, EXTERNAL_FQDN
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
     #pingBeforeActivate: false
