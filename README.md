@@ -2,11 +2,27 @@
 
 A workload runner for testing Lettuce client fault tolerance against Redis database upgrades.
 
+> **⚠️ IMPORTANT**: This project requires a custom build of lettuce-core from the `feature/maintenance-events` branch. Use `./scripts/build.sh` to build the project correctly.
+
 ## Build
 
+> **⚠️ IMPORTANT**: This project REQUIRES a custom build of lettuce-core from the `feature/maintenance-events` branch to function properly. The standard lettuce-core release will not work.
+
+### Building the Project
+
+Use the provided build script to automatically build and install the required custom lettuce-core version:
+
 ```sh
-mvn clean package
+./scripts/build.sh
 ```
+
+The build script will:
+1. Clone the lettuce-core repository from the `feature/maintenance-events` branch
+2. Build and install the custom lettuce-core version (7.0.0.MAINT-SNAPSHOT) to your local Maven repository
+3. Build and test the lettuce-test-app using the custom lettuce-core version
+
+### CI/CD Integration
+The GitHub Actions workflow automatically builds with the custom lettuce-core version from the `feature/maintenance-events` branch. See `.github/workflows/integration.yaml` for details.
 ## Usage
 Basic usage with specified runner configuration file and custom log directory:
 ```sh
@@ -144,29 +160,16 @@ Example query for visualising throughput per second of get on 10s window
  | `redis.command.errors`      | Counter | Counts the number of failed Redis command API calls that completed with an exception.                 | `command`: Redis command (e.g., `GET`, `SET`)                                                      |
 
 ### Lettuce App Custom Metrics
-Modified version of lettuce with additional metrics is available at [lettuce-metrics](https://github.com/ggivo/lettuce/tree/lettuce-observability)
-To use this version, you need to build the project and replace the lettuce version in the `pom.xml` file with the built jar file.
+This project uses a modified version of lettuce-core with additional metrics from the `feature/maintenance-events` branch.
 
-**Steps to build and replace the lettuce jar file:**
-```shell
-git clone -b lettuce-observability https://github.com/ggivo/lettuce/ lettuce-observability
-cd lettuce-observability
-mvn clean install -DskipTests
-```
-Write down the version of the built jar file. It will be used in the next step.
+**Building with Custom Lettuce-Core:**
+The build script automatically handles building and using the required custom lettuce-core version:
 
-**Make sure lettuce version in the `pom.xml` file is updated to the built jar file.**
-```xml
-        <dependency>
-            <groupId>io.lettuce</groupId>
-            <artifactId>lettuce-core</artifactId>
-            <version>{PROVIDE_CUSTOM_LETTUCE_VERSION}</version>
-        </dependency>
-```
-**Last step is to build the lettuce-test-app with the updated lettuce jar file.**
 ```shell
-mvn clean package
+./scripts/build.sh
 ```
+
+This is the only supported way to build the project, as it requires the custom lettuce-core implementation.
 
 Additional metrics aer enabled/disabled via configuration property in the `runner-config.yaml` file:
 ```yaml
