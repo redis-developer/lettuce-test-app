@@ -48,9 +48,13 @@ public class MetricsReporter {
 
     public static final String REDIS_OPERATION_DURATION = "redis.operation.duration";
 
+    public static final String REDIS_OPERATIONS_TOTAL = "redis.operations.total";
+
     public static final String REDIS_RECONNECTION_DURATION = "redis.reconnection.duration";
 
     public static final String REDIS_TEST_DURATION = "redis.test.duration";
+
+    public static final String LETTUCE_RECONNECT_TOTAL_ATTEMPTS = "lettuce.reconnect.total.attempts";
 
     private final MeterRegistry meterRegistry;
 
@@ -236,7 +240,7 @@ public class MetricsReporter {
     }
 
     private Counter createCommandTotalCounter(CommandKey commandKey) {
-        return Counter.builder("redis.operations.total")
+        return Counter.builder(REDIS_OPERATIONS_TOTAL)
                 .description("Counts the number of total Redis command API calls completed successfully or with an error")
                 .tag("command", commandKey.commandName).tag("status", commandKey.status.name().toLowerCase())
                 .register(meterRegistry);
@@ -263,7 +267,7 @@ public class MetricsReporter {
     }
 
     private Counter createRedisConnectionsDrops(ConnectionKey connectionKey) {
-        return Counter.builder("redis.connection.drops.total").description("Counts the number of disconnects")
+        return Counter.builder("redis.connection.drops.total").description("Counts the number of disconnects per connection")
                 .tag("epid", connectionKey.getEpId()).tag("local", connectionKey.getLocalAddress().toString())
                 .tag("remote", connectionKey.getRemoteAddress().toString()).register(meterRegistry);
     }
@@ -276,7 +280,7 @@ public class MetricsReporter {
     }
 
     private Counter createReconnectAttemptTotalCounter() {
-        return Counter.builder("lettuce.reconnect.total.attempts").description("Counts the number of Redis reconnect attempts")
+        return Counter.builder(LETTUCE_RECONNECT_TOTAL_ATTEMPTS).description("Counts the number of Redis reconnect attempts")
                 .register(meterRegistry);
     }
 
