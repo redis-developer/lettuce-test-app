@@ -11,17 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout lettuce-test-app repository
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: lettuce-test-app
-
-      - name: Checkout lettuce-core custom branch
-        uses: actions/checkout@v4
-        with:
-          repository: redis/lettuce
-          ref: feature/maintenance-events
-          path: lettuce-core
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -30,32 +21,15 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Build and install custom lettuce-core
-        working-directory: lettuce-core
-        run: |
-          echo "Building REQUIRED custom lettuce-core from feature/maintenance-events branch"
-          mvn versions:set -DnewVersion=7.0.0.MAINT-SNAPSHOT
-          mvn -B clean install -DskipTests
-          echo "Custom lettuce-core 7.0.0.MAINT-SNAPSHOT installed to local repository"
-
-      - name: Verify lettuce-core installation
-        working-directory: lettuce-core
-        run: |
-          echo "Verifying lettuce-core installation:"
-          ls -la ~/.m2/repository/io/lettuce/lettuce-core/7.0.0.MAINT-SNAPSHOT/
-
       - name: Check code formatting
-        working-directory: lettuce-test-app
         run: mvn formatter:validate
 
-      - name: Build and verify lettuce-test-app with REQUIRED custom lettuce-core
-        working-directory: lettuce-test-app
+      - name: Build and verify lettuce-test-app
         run: |
-          echo "Building lettuce-test-app with REQUIRED custom lettuce-core version 7.0.0.MAINT-SNAPSHOT"
-          mvn -B clean verify -Dlettuce.version=7.0.0.MAINT-SNAPSHOT
+          echo "Building lettuce-test-app with lettuce-core snapshot version"
+          mvn -B clean verify
 
       - name: Run integration tests
-        working-directory: lettuce-test-app
         run: |
-          echo "Running integration tests with REQUIRED custom lettuce-core"
-          mvn test -Dlettuce.version=7.0.0.MAINT-SNAPSHOT
+          echo "Running integration tests"
+          mvn test

@@ -2,27 +2,40 @@
 
 A workload runner for testing Lettuce client fault tolerance against Redis database upgrades.
 
-> **⚠️ IMPORTANT**: This project requires a custom build of lettuce-core from the `feature/maintenance-events` branch. Use `./scripts/build.sh` to build the project correctly.
+> **ℹ️ NOTE**: This project uses lettuce-core 7.0.0-SNAPSHOT which includes the maintenance events features. The snapshot version is automatically downloaded from Maven repositories.
 
 ## Build
 
-> **⚠️ IMPORTANT**: This project REQUIRES a custom build of lettuce-core from the `feature/maintenance-events` branch to function properly. The standard lettuce-core release will not work.
-
 ### Building the Project
 
-Use the provided build script to automatically build and install the required custom lettuce-core version:
+Use the provided build script to build and test the project:
 
 ```sh
 ./scripts/build.sh
 ```
 
 The build script will:
-1. Clone the lettuce-core repository from the `feature/maintenance-events` branch
-2. Build and install the custom lettuce-core version (7.0.0.MAINT-SNAPSHOT) to your local Maven repository
-3. Build and test the lettuce-test-app using the custom lettuce-core version
+1. Check code formatting
+2. Build the lettuce-test-app using the lettuce-core version specified in pom.xml
+3. Run tests to verify everything works correctly
+
+### Manual Build
+
+You can also build manually using Maven:
+
+```sh
+# Check formatting
+mvn formatter:validate
+
+# Build and test
+mvn clean verify
+
+# Run tests
+mvn test
+```
 
 ### CI/CD Integration
-The GitHub Actions workflow automatically builds with the custom lettuce-core version from the `feature/maintenance-events` branch. See `.github/workflows/integration.yaml` for details.
+The GitHub Actions workflow automatically builds and tests the project. See `.github/workflows/integration.yaml` for details.
 ## Usage
 Basic usage with specified runner configuration file and custom log directory:
 ```sh
@@ -166,16 +179,16 @@ Example query for visualising throughput per second of get on 10s window
  | `redis.operations.total`      | Counter   | Counts the number of total Redis command API calls completed successfully or with an error.                                                                                                      | `command`: Redis command (e.g., `GET`, `SET`), status: (SUCCESS, ERROR)                 |
 
 ### Lettuce App Custom Metrics
-This project uses a modified version of lettuce-core with additional metrics from the `feature/maintenance-events` branch.
+This project uses lettuce-core 7.0.0-SNAPSHOT which includes additional metrics from the maintenance events features that were merged into the main branch.
 
-**Building with Custom Lettuce-Core:**
-The build script automatically handles building and using the required custom lettuce-core version:
+**Building the Project:**
+Use the build script to build and test the project:
 
 ```shell
 ./scripts/build.sh
 ```
 
-This is the only supported way to build the project, as it requires the custom lettuce-core implementation.
+The lettuce-core snapshot version with maintenance events features is automatically downloaded from Maven repositories.
 
 Additional metrics aer enabled/disabled via configuration property in the `runner-config.yaml` file:
 ```yaml

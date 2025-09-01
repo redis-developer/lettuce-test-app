@@ -35,8 +35,8 @@ runner:
 
   clientOptions:
     #autoReconnect: true
-    maintenanceEventsConfig:
-      enabled: true
+    #maintenanceEventsConfig:
+    #  enabled: true
     #  movingEndpointAddressType: EXTERNAL_IP # INTERNAL_IP, INTERNAL_FQDN, EXTERNAL_IP, EXTERNAL_FQDN
     #reconnectOptions:
     #  fixedDelay: PT1S # 1s Configures constant delay between re-connection attempts
@@ -47,7 +47,7 @@ runner:
     #disconnectedBehavior: REJECT_COMMANDS  #Options: DEFAULT, ACCEPT_COMMANDS, REJECT_COMMANDS
     timeoutOptions: # Options to configure command timeouts
         fixedTimeout: PT0.200S # 200 ms
-        timeoutsRelaxingDuringMaintenance: PT1S # 1 s
+    #    timeoutsRelaxingDuringMaintenance: PT1S # 1 s
     #socketOptions:  # Options to configure low-level socket options for the connections kept to Redis servers.
     #  connectTimeout: PT10S # 10 s
     #  tcpUserTimeoutOptions:
