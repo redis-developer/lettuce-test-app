@@ -33,9 +33,9 @@ public abstract class BaseWorkload {
 
     protected MetricsReporter metricsReporter;
 
-    private final CommonWorkloadOptions options;
+    protected final CommonWorkloadOptions options;
 
-    private final KeyGenerator keyGenerator;
+    protected final KeyGenerator keyGenerator;
 
     public BaseWorkload() {
         options = DefaultWorkloadOptions.DEFAULT;

@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Configuration
 @ConfigurationProperties(prefix = "runner")
-@PropertySource(value = "classpath:runner-config-defaults.yaml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:${runner.defaults:runner-config-defaults.yaml}", factory = YamlPropertySourceFactory.class)
 @PropertySource(value = "file:${runner.config:runner-config.yaml}", factory = YamlPropertySourceFactory.class, ignoreResourceNotFound = true)
 public class WorkloadRunnerConfig {
 
