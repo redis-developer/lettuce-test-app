@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.util.HashMap;
 import java.util.Map;
 
-@SpringBootApplication(scanBasePackages = {  "io.lettuce.test.metrics", "io.lettuce.test.config", "redis.clients.jedis.test" })
+@SpringBootApplication(scanBasePackages = { "io.lettuce.test.metrics", "io.lettuce.test.config", "redis.clients.jedis.test" })
 public class JedisTestApplication implements ApplicationRunner {
 
     private final JedisWorkloadRunner runner;

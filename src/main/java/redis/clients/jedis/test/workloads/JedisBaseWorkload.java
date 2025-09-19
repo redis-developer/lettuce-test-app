@@ -13,6 +13,7 @@ import static io.lettuce.test.metrics.MetricsReporter.cmdKeyError;
 import static io.lettuce.test.metrics.MetricsReporter.cmdKeyOk;
 
 public abstract class JedisBaseWorkload extends BaseWorkload {
+
     protected static final Logger log = LoggerFactory.getLogger(JedisBaseWorkload.class);
 
     protected final UnifiedJedis client;
@@ -32,11 +33,9 @@ public abstract class JedisBaseWorkload extends BaseWorkload {
 
         try {
             doRun();
-            metricsReporter.recordWorkloadExecutionDuration(timer, getType(),
-                    BaseWorkload.Status.SUCCESSFUL);
+            metricsReporter.recordWorkloadExecutionDuration(timer, getType(), BaseWorkload.Status.SUCCESSFUL);
         } catch (Exception e) {
-            metricsReporter.recordWorkloadExecutionDuration(timer, getType(),
-                    BaseWorkload.Status.COMPLETED_WITH_ERRORS);
+            metricsReporter.recordWorkloadExecutionDuration(timer, getType(), BaseWorkload.Status.COMPLETED_WITH_ERRORS);
             throw e;
         }
     }
@@ -53,4 +52,5 @@ public abstract class JedisBaseWorkload extends BaseWorkload {
         }
         return null;
     }
+
 }

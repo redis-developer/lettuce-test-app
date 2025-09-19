@@ -47,4 +47,5 @@ public class JedisRedisCommandsWorkload extends JedisBaseWorkload {
             delay(options().delayAfterIteration());
         }
     }
+
 }
