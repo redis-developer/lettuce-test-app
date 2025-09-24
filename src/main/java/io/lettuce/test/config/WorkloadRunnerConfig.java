@@ -363,7 +363,7 @@ public class WorkloadRunnerConfig {
 
         private Boolean autoReconnect;
 
-        private MaintenanceEventsConfig maintenanceEventsConfig;
+        private MaintNotificationsConfig maintNotificationsConfig;
 
         private Boolean pingBeforeActivate;
 
@@ -388,12 +388,12 @@ public class WorkloadRunnerConfig {
             this.autoReconnect = autoReconnect;
         }
 
-        public MaintenanceEventsConfig getMaintenanceEventsConfig() {
-            return maintenanceEventsConfig;
+        public MaintNotificationsConfig getMaintNotificationsConfig() {
+            return maintNotificationsConfig;
         }
 
-        public void setMaintenanceEventsConfig(MaintenanceEventsConfig supportMaintenanceEvents) {
-            this.maintenanceEventsConfig = supportMaintenanceEvents;
+        public void setMaintNotificationsConfig(MaintNotificationsConfig maintNotificationsConfig) {
+            this.maintNotificationsConfig = maintNotificationsConfig;
         }
 
         public Boolean getPingBeforeActivate() {
@@ -446,10 +446,10 @@ public class WorkloadRunnerConfig {
 
         @Override
         public String toString() {
-            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", proactiveRebind=" + maintenanceEventsConfig
-                    + ", pingBeforeActivate=" + pingBeforeActivate + ", requestQueueSize=" + requestQueueSize
-                    + ", timeoutOptions=" + timeoutOptions + ", socketOptions=" + socketOptions + ", disconnectedBehavior='"
-                    + disconnectedBehavior + '\'' + ", reconnectOptions=" + reconnectOptions + '}';
+            return "ClientOptionsConfig{" + "autoReconnect=" + autoReconnect + ", maintenanceEventsConfig="
+                    + maintNotificationsConfig + ", pingBeforeActivate=" + pingBeforeActivate + ", requestQueueSize="
+                    + requestQueueSize + ", timeoutOptions=" + timeoutOptions + ", socketOptions=" + socketOptions
+                    + ", disconnectedBehavior='" + disconnectedBehavior + '\'' + ", reconnectOptions=" + reconnectOptions + '}';
         }
 
         public MetricsOptionsConfig getMetricsOptions() {
@@ -648,11 +648,11 @@ public class WorkloadRunnerConfig {
 
     }
 
-    public static class MaintenanceEventsConfig {
+    public static class MaintNotificationsConfig {
 
         boolean enabled;
 
-        String movingEndpointAddressType;
+        String endpointType;
 
         public boolean isEnabled() {
             return enabled;
@@ -662,12 +662,12 @@ public class WorkloadRunnerConfig {
             this.enabled = enabled;
         }
 
-        public String getMovingEndpointAddressType() {
-            return movingEndpointAddressType;
+        public String getEndpointType() {
+            return endpointType;
         }
 
-        public void setMovingEndpointAddressType(String movingEndpointAddressType) {
-            this.movingEndpointAddressType = movingEndpointAddressType;
+        public void setEndpointType(String endpointType) {
+            this.endpointType = endpointType;
         }
 
     }

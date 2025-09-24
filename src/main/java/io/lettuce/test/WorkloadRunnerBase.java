@@ -2,8 +2,7 @@ package io.lettuce.test;
 
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.ClientOptions;
-import io.lettuce.core.MaintenanceEventsOptions;
-import io.lettuce.core.MaintenanceEventsOptions.AddressType;
+import io.lettuce.core.MaintNotificationsConfig.EndpointType;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
@@ -21,7 +20,7 @@ import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.Delay;
 import io.lettuce.test.config.WorkloadRunnerConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.ClientOptionsConfig;
-import io.lettuce.test.config.WorkloadRunnerConfig.MaintenanceEventsConfig;
+import io.lettuce.test.config.WorkloadRunnerConfig.MaintNotificationsConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.SocketOptionsConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.TcpUserTimeoutOptionsConfig;
 import io.lettuce.test.config.WorkloadRunnerConfig.TimeoutOptionsConfig;
@@ -41,7 +40,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -316,19 +314,19 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
                 builder.autoReconnect(config.getAutoReconnect());
             }
 
-            if (config.getMaintenanceEventsConfig() != null) {
-                MaintenanceEventsConfig maintEventsCfg = config.getMaintenanceEventsConfig();
+            if (config.getMaintNotificationsConfig() != null) {
+                MaintNotificationsConfig maintEventsCfg = config.getMaintNotificationsConfig();
                 if (maintEventsCfg.isEnabled()) {
-                    MaintenanceEventsOptions options;
-                    if (maintEventsCfg.getMovingEndpointAddressType() != null) {
-                        AddressType addrType = AddressType.valueOf(maintEventsCfg.getMovingEndpointAddressType());
-                        options = MaintenanceEventsOptions.enabled(addrType);
+                    io.lettuce.core.MaintNotificationsConfig options;
+                    if (maintEventsCfg.getEndpointType() != null) {
+                        EndpointType addrType = EndpointType.valueOf(maintEventsCfg.getEndpointType());
+                        options = io.lettuce.core.MaintNotificationsConfig.enabled(addrType);
                         log.info("Enabling supportMaintenanceEvents with address type: {}", addrType);
                     } else {
-                        options = MaintenanceEventsOptions.enabled();
+                        options = io.lettuce.core.MaintNotificationsConfig.enabled();
                         log.info("Enabling supportMaintenanceEvents with default (auto resolve) address type.");
                     }
-                    builder.supportMaintenanceEvents(options);
+                    builder.maintNotificationsConfig(options);
                 }
             }
 
@@ -415,22 +413,6 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         if (config.getCount() != null) {
             builder.count(config.getCount());
         }
-    }
-
-    static class OptionalClientOptions {
-
-        static public void applySupportMaintenanceEventsOption(ClientOptions.Builder builder, MaintenanceEventsConfig value) {
-            try {
-                Method method = builder.getClass().getMethod("supportMaintenanceEvents", boolean.class);
-                method.invoke(builder, value);
-            } catch (NoSuchMethodException e) {
-                throw new IllegalStateException(
-                        "supportMaintenanceEvents configuration option can't be applied. Not available in this build.", e);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException("Failed to configure proactiveRebind option.", e);
-            }
-        }
-
     }
 
     // This class is a workaround to avoid a compile-time dependency on Lettuce's MicrometerConnectionMonitor class
