@@ -360,17 +360,7 @@ public abstract class WorkloadRunnerBase<C extends AbstractRedisClient, Conn ext
         }
 
         if (config.getTimeoutsRelaxingDuringMaintenance() != null) {
-            try {
-                Method timeoutsRelaxingDuringMaintenance = builder.getClass().getMethod("timeoutsRelaxingDuringMaintenance",
-                        Duration.class);
-                timeoutsRelaxingDuringMaintenance.invoke(builder, config.getTimeoutsRelaxingDuringMaintenance());
-                log.info("ProactiveTimeoutsRelaxingMethod enabled successfully.");
-            } catch (NoSuchMethodException e) {
-                throw new IllegalStateException(
-                        "The method 'timeoutsRelaxingDuringMaintenance' is not available in this build.", e);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException("Failed to invoke 'timeoutsRelaxingDuringMaintenance' method.", e);
-            }
+            builder.timeoutsRelaxingDuringMaintenance(config.getTimeoutsRelaxingDuringMaintenance());
         }
     }
 
