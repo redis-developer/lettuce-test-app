@@ -17,7 +17,7 @@
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <lettuce.version>7.0.0-SNAPSHOT</lettuce.version>
+        <lettuce.version>7.0.0.RELEASE</lettuce.version>
     </properties>
 
     <repositories>
