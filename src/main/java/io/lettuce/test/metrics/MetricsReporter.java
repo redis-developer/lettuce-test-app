@@ -28,9 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.OptionalDouble;
@@ -109,6 +107,12 @@ public class MetricsReporter {
 
     private volatile Instant testRunEnd;
 
+    /**
+     * maxLatency is used to tracks max latency holds the true maximum since app start. Note: Miicrometer SimpleRegistry Timer
+     * max is rolled over every 1 minute.
+     */
+    private final AtomicLong maxLatencyNs = new AtomicLong(-1);
+
     public MetricsReporter(MeterRegistry meterRegistry, SimpleMeterRegistry simpleMeterRegistry,
             @Qualifier("metricReporterScheduler") TaskScheduler taskScheduler, TestRunProperties testRunProperties) {
         this.meterRegistry = meterRegistry;
@@ -157,6 +161,7 @@ public class MetricsReporter {
         long timeNs = sample.stop(timer);
 
         commandLatencyTotalTimer.record(Duration.ofNanos(timeNs));
+        maxLatencyNs.updateAndGet(currentMax -> Math.max(currentMax, timeNs));
 
         Counter counter = commandTotalCounter.computeIfAbsent(commandKey, this::createCommandTotalCounter);
         counter.increment();
@@ -452,16 +457,17 @@ public class MetricsReporter {
         return new RedisOperationsStatsSummary(totalCommands, successfulCommands, failedCommands);
     }
 
-    record LatencyStats(double min, double max, double median, double p95, double p99) {
+    public record LatencyStats(double min, double max, double median, double p95, double p99) {
     }
 
-    private LatencyStats getLatencyStats() {
+    public LatencyStats getLatencyStats() {
         Timer durationTotalTimer = simpleMeterRegistry.find(REDIS_OPERATION_DURATION_TOTAL).timer();
         if (durationTotalTimer == null) {
             return new LatencyStats(-1, -1, -1, -1, -1);
         }
         HistogramSnapshot snapshot = durationTotalTimer.takeSnapshot();
         ValueAtPercentile[] percentiles = snapshot.percentileValues();
+        double max = Duration.ofNanos(maxLatencyNs.get()).toMillis();
         double median = -1;
         double p95 = -1;
         double p99 = -1;
@@ -475,7 +481,7 @@ public class MetricsReporter {
             }
         }
 
-        return new LatencyStats(0, snapshot.max(TimeUnit.MILLISECONDS), median, p95, p99);
+        return new LatencyStats(0, max, median, p95, p99);
     }
 
     private OptionalDouble getAverageReconnectionDuration() {
