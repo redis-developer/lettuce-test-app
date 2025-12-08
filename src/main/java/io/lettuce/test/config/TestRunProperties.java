@@ -24,9 +24,9 @@ public class TestRunProperties {
     private String instanceId;
 
     /**
-     * Application name for identification purposes. Defaults to "lettuce-test-app".
+     * Application name for identification purposes. Defaults to spring.application.name.
      */
-    @Value("${appName:lettuce-test-app}")
+    @Value("${appName:${spring.application.name}}")
     private String appName;
 
     public String getRunId() {

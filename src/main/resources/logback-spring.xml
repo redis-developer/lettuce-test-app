@@ -6,7 +6,7 @@
 
     <property name="METRICS_LOG_PATTERN" value="${METRICS_LOG_PATTERN:-%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n}"/>
 
-    <property name="CONFIG_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/lettuce-test-app-config.log}"/>
+    <property name="CONFIG_LOG_FILE" value="${logging.file.config:-${LOG_PATH:-logs}/${spring.application.name}-config.log}"/>
     <appender name="CONFIG_FILE" class="ch.qos.logback.core.FileAppender">
         <file>${CONFIG_LOG_FILE}</file>
         <encoder>
@@ -15,7 +15,7 @@
         </encoder>
     </appender>
 
-    <property name="METRICS_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/lettuce-test-app-metrics.log}"/>
+    <property name="METRICS_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/${spring.application.name}-metrics.log}"/>
     <appender name="METRICS_FILE" class="ch.qos.logback.core.FileAppender">
         <file>${METRICS_LOG_FILE}</file>
         <encoder>
@@ -24,7 +24,7 @@
         </encoder>
     </appender>
 
-    <property name="METRICS_TOTAL_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/lettuce-test-app-metrics-summary.log}"/>
+    <property name="METRICS_TOTAL_LOG_FILE" value="${logging.file.metrics:-${LOG_PATH:-logs}/${spring.application.name}-metrics-summary.log}"/>
     <appender name="METRICS_TOTAL_FILE" class="ch.qos.logback.core.FileAppender">
         <file>${METRICS_TOTAL_LOG_FILE}</file>
         <encoder>

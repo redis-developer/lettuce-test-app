@@ -138,7 +138,7 @@ public class MetricsReporter {
         return Timer.start(meterRegistry);
     }
 
-    Timer.Sample startCommandTimer() {
+    public Timer.Sample startCommandTimer() {
         return Timer.start(meterRegistry);
     }
 
@@ -156,7 +156,7 @@ public class MetricsReporter {
 
     }
 
-    void recordCommandLatency(CommandKey commandKey, Timer.Sample sample) {
+    public void recordCommandLatency(CommandKey commandKey, Timer.Sample sample) {
         Timer timer = commandLatencyTimers.computeIfAbsent(commandKey, this::createCommandLatencyTimer);
         long timeNs = sample.stop(timer);
 
@@ -167,7 +167,7 @@ public class MetricsReporter {
         counter.increment();
     }
 
-    void incrementCommandError(String commandName) {
+    public void incrementCommandError(String commandName) {
         commandErrorCounters.computeIfAbsent(commandName, this::createCommandErrorCounter).increment();
         commandErrorTotalCounter.increment();
     }
